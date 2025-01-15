@@ -28,7 +28,7 @@ export const fetchGuardianNews = async (category: string = ''): Promise<Guardian
       'show-fields': 'thumbnail,bodyText',
       'page-size': '10',
       ...(category === 'Top Stories' 
-        ? { 'tag': 'tone/news' } 
+        ? { 'tag': 'tone/news,-tone/wish' } 
         : { 'section': category.toLowerCase() }),
     });
 
