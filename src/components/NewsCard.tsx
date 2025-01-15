@@ -37,6 +37,18 @@ export const NewsCard = ({
     return <>{children}</>;
   };
 
+  // Format summary to be more concise
+  const formatSummary = (text: string) => {
+    // Remove any text in parentheses as it's usually context that can be omitted
+    const cleanText = text.replace(/\([^)]*\)/g, '');
+    // Split into sentences
+    const sentences = cleanText.split(/[.!?]+/);
+    // Take first two sentences and join them
+    return sentences.slice(0, 2).join('. ').trim() + '.';
+  };
+
+  const formattedSummary = formatSummary(summary);
+
   return (
     <CardWrapper>
       <Card className="w-full max-w-2xl mx-auto overflow-hidden animate-slideUp hover:shadow-lg transition-shadow duration-200">
@@ -58,7 +70,9 @@ export const NewsCard = ({
                 <ExternalLink className="h-5 w-5 flex-shrink-0 text-gray-400" />
               )}
             </div>
-            <p className="text-gray-600 mb-4 line-clamp-3">{summary}</p>
+            <p className="text-gray-600 mb-4 text-base leading-relaxed">
+              {formattedSummary}
+            </p>
             <div className="flex justify-between items-center text-sm text-gray-500">
               <span>{source}</span>
               <span>{new Date(publishedAt).toLocaleDateString()}</span>
