@@ -27,7 +27,9 @@ export const fetchGuardianNews = async (category: string = ''): Promise<Guardian
       'api-key': 'GUARDIAN_API_KEY',
       'show-fields': 'thumbnail,bodyText',
       'page-size': '10',
-      ...(category !== 'Top Stories' && { section: category.toLowerCase() }),
+      ...(category === 'Top Stories' 
+        ? { 'tag': 'tone/news' } 
+        : { 'section': category.toLowerCase() }),
     });
 
     const response = await fetch(
