@@ -3,7 +3,7 @@ import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { CategoryNav } from "@/components/CategoryNav";
 import { useQuery } from "@tanstack/react-query";
-import { fetchGuardianNews, GuardianArticle } from "@/utils/guardianApi";
+import { fetchNews } from "@/utils/newsApi";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
@@ -20,8 +20,8 @@ const categories = [
   "Top Stories",
   "Technology",
   "Business",
-  "Sport",
-  "Culture",
+  "Sports",
+  "Entertainment",
 ];
 
 const Index = () => {
@@ -29,7 +29,9 @@ const Index = () => {
 
   const { data: news, isLoading: isLoadingNews } = useQuery({
     queryKey: ['news', activeCategory],
-    queryFn: () => fetchGuardianNews(activeCategory),
+    queryFn: () => fetchNews(activeCategory),
+    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    refetchOnWindowFocus: false,
   });
 
   const { data: specialEvents, isLoading: isLoadingEvents } = useQuery({
@@ -128,16 +130,16 @@ const Index = () => {
                       </CarouselItem>
                     ))}
                     
-                    {news?.map((article: GuardianArticle) => (
-                      <CarouselItem key={article.id}>
+                    {news?.map((article) => (
+                      <CarouselItem key={article.url}>
                         <NewsCard
-                          title={article.webTitle}
-                          summary={article.fields?.bodyText?.slice(0, 200) + '...' || ''}
-                          imageUrl={article.fields?.thumbnail || '/placeholder.svg'}
-                          category={article.sectionName}
-                          source="The Guardian"
-                          publishedAt={article.webPublicationDate}
-                          url={article.webUrl}
+                          title={article.title}
+                          summary={article.content || article.description}
+                          imageUrl={article.urlToImage || '/placeholder.svg'}
+                          category={activeCategory}
+                          source={article.source.name}
+                          publishedAt={article.publishedAt}
+                          url={article.url}
                         />
                       </CarouselItem>
                     ))}
