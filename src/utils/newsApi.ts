@@ -1,23 +1,26 @@
-export interface NewsArticle {
-  title: string;
-  description: string;
-  content: string;
-  urlToImage: string;
-  publishedAt: string;
-  source: {
-    name: string;
+export interface GuardianArticle {
+  id: string;
+  type: string;
+  sectionId: string;
+  webTitle: string;
+  webPublicationDate: string;
+  webUrl: string;
+  fields: {
+    thumbnail?: string;
+    bodyText: string;
+    trailText: string;
   };
-  url: string;
 }
 
-export interface NewsResponse {
-  articles: NewsArticle[];
-  status: string;
-  totalResults: number;
-  message?: string; // Added optional message property for error responses
+export interface GuardianResponse {
+  response: {
+    status: string;
+    results: GuardianArticle[];
+    total: number;
+  };
 }
 
-export const fetchNews = async (category: string = ''): Promise<NewsArticle[]> => {
+export const fetchNews = async (category: string = ''): Promise<GuardianArticle[]> => {
   try {
     const response = await fetch(
       `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-news?category=${encodeURIComponent(category)}`,
@@ -33,18 +36,13 @@ export const fetchNews = async (category: string = ''): Promise<NewsArticle[]> =
       throw new Error(errorData.error || 'Failed to fetch news');
     }
 
-    const data: NewsResponse = await response.json();
+    const data: GuardianResponse = await response.json();
     
-    if (data.status === 'error') {
-      throw new Error(data.message || 'Failed to fetch news');
+    if (data.response.status !== 'ok') {
+      throw new Error('Failed to fetch news from Guardian');
     }
 
-    // Filter out articles without required fields and provide fallbacks
-    return data.articles.filter(article => article.title && article.description).map(article => ({
-      ...article,
-      urlToImage: article.urlToImage || '/placeholder.svg',
-      content: article.content || article.description,
-    }));
+    return data.response.results;
   } catch (error) {
     console.error('Error fetching news:', error);
     throw error;

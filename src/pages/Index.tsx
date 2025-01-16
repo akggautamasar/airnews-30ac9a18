@@ -20,8 +20,8 @@ const categories = [
   "Top Stories",
   "Technology",
   "Business",
-  "Sports",
-  "Entertainment",
+  "Sport",
+  "Culture",
 ];
 
 const Index = () => {
@@ -30,7 +30,7 @@ const Index = () => {
   const { data: news, isLoading: isLoadingNews } = useQuery({
     queryKey: ['news', activeCategory],
     queryFn: () => fetchNews(activeCategory),
-    staleTime: 5 * 60 * 1000, // Cache for 5 minutes
+    staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
   });
 
@@ -120,26 +120,29 @@ const Index = () => {
                     {specialEvents?.map((event) => (
                       <CarouselItem key={event.id}>
                         <NewsCard
-                          title={event.title}
-                          summary={event.description}
-                          imageUrl={event.image_url}
+                          article={{
+                            id: event.id,
+                            type: 'special',
+                            sectionId: 'events',
+                            webTitle: event.title,
+                            webPublicationDate: event.event_date,
+                            webUrl: '#',
+                            fields: {
+                              thumbnail: event.image_url,
+                              bodyText: event.description,
+                              trailText: event.description,
+                            },
+                          }}
                           category="Special Event"
-                          source="Local Events"
-                          publishedAt={event.event_date}
                         />
                       </CarouselItem>
                     ))}
                     
                     {news?.map((article) => (
-                      <CarouselItem key={article.url}>
+                      <CarouselItem key={article.id}>
                         <NewsCard
-                          title={article.title}
-                          summary={article.content || article.description}
-                          imageUrl={article.urlToImage || '/placeholder.svg'}
+                          article={article}
                           category={activeCategory}
-                          source={article.source.name}
-                          publishedAt={article.publishedAt}
-                          url={article.url}
                         />
                       </CarouselItem>
                     ))}
