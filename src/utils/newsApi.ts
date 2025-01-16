@@ -14,6 +14,7 @@ export interface NewsResponse {
   articles: NewsArticle[];
   status: string;
   totalResults: number;
+  message?: string; // Added optional message property for error responses
 }
 
 export const fetchNews = async (category: string = ''): Promise<NewsArticle[]> => {
