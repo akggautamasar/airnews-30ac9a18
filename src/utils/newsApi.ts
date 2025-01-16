@@ -18,18 +18,11 @@ export interface NewsResponse {
 
 export const fetchNews = async (category: string = ''): Promise<NewsArticle[]> => {
   try {
-    const apiKey = 'e7a83668-9fd1-4b09-a497-b0c39dc2b7ec';
-    const baseUrl = 'https://newsapi.org/v2/top-headlines';
-    const country = 'us'; // You can change this to get news from different countries
-
-    const queryParams = new URLSearchParams({
-      apiKey,
-      country,
-      pageSize: '10',
-      ...(category !== 'Top Stories' && { category: category.toLowerCase() }),
+    const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-news?category=${encodeURIComponent(category)}`, {
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+      },
     });
-
-    const response = await fetch(`${baseUrl}?${queryParams.toString()}`);
     
     if (!response.ok) {
       throw new Error('Failed to fetch news');
