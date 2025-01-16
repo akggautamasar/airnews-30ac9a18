@@ -13,6 +13,11 @@ interface NewsCardProps {
 export const NewsCard = ({ article, category }: NewsCardProps) => {
   const { toast } = useToast();
 
+  // Early return if article or required fields are undefined
+  if (!article?.fields) {
+    return null;
+  }
+
   const formatSummary = (text: string) => {
     const cleanText = text.replace(/\([^)]*\)/g, '');
     const sentences = cleanText.split(/[.!?]+/);
@@ -25,8 +30,8 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     return Math.ceil(words / wordsPerMinute);
   };
 
-  const summary = article.fields.trailText || formatSummary(article.fields.bodyText);
-  const readingTime = calculateReadingTime(article.fields.bodyText);
+  const summary = article.fields.trailText || formatSummary(article.fields.bodyText || '');
+  const readingTime = calculateReadingTime(article.fields.bodyText || '');
 
   const handleShare = async (e: React.MouseEvent) => {
     e.preventDefault();

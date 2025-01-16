@@ -23,13 +23,27 @@ serve(async (req) => {
     const response = await fetch(guardianUrl.toString());
     const data = await response.json();
 
+    if (!response.ok) {
+      throw new Error(`Guardian API error: ${data.message || 'Unknown error'}`);
+    }
+
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 500,
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+    console.error('Error in fetch-news function:', error);
+    return new Response(
+      JSON.stringify({ 
+        error: error.message,
+        response: { 
+          status: 'error',
+          results: [] 
+        }
+      }),
+      { 
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        status: 500
+      }
+    );
   }
 });
