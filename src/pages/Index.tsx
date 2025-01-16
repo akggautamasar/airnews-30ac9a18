@@ -8,6 +8,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 
 const categories = [
   "Top Stories",
@@ -56,7 +63,6 @@ const Index = () => {
       description: "Annual event demonstrating support for environmental protection worldwide.",
       type: "Environmental"
     },
-    // Add more calendar events as needed
   ];
 
   return (
@@ -106,34 +112,42 @@ const Index = () => {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
             ) : (
-              <ScrollArea className="h-[calc(100vh-200px)]">
-                <div className="space-y-6 pr-4">
-                  {specialEvents?.map((event) => (
-                    <NewsCard
-                      key={event.id}
-                      title={event.title}
-                      summary={event.description}
-                      imageUrl={event.image_url}
-                      category="Special Event"
-                      source="Local Events"
-                      publishedAt={event.event_date}
-                    />
-                  ))}
-                  
-                  {news?.map((article: GuardianArticle) => (
-                    <NewsCard
-                      key={article.id}
-                      title={article.webTitle}
-                      summary={article.fields?.bodyText?.slice(0, 200) + '...' || ''}
-                      imageUrl={article.fields?.thumbnail || '/placeholder.svg'}
-                      category={article.sectionName}
-                      source="The Guardian"
-                      publishedAt={article.webPublicationDate}
-                      url={article.webUrl}
-                    />
-                  ))}
-                </div>
-              </ScrollArea>
+              <div className="max-w-4xl mx-auto px-4">
+                <Carousel className="w-full">
+                  <CarouselContent>
+                    {specialEvents?.map((event) => (
+                      <CarouselItem key={event.id}>
+                        <NewsCard
+                          title={event.title}
+                          summary={event.description}
+                          imageUrl={event.image_url}
+                          category="Special Event"
+                          source="Local Events"
+                          publishedAt={event.event_date}
+                        />
+                      </CarouselItem>
+                    ))}
+                    
+                    {news?.map((article: GuardianArticle) => (
+                      <CarouselItem key={article.id}>
+                        <NewsCard
+                          title={article.webTitle}
+                          summary={article.fields?.bodyText?.slice(0, 200) + '...' || ''}
+                          imageUrl={article.fields?.thumbnail || '/placeholder.svg'}
+                          category={article.sectionName}
+                          source="The Guardian"
+                          publishedAt={article.webPublicationDate}
+                          url={article.webUrl}
+                        />
+                      </CarouselItem>
+                    ))}
+                  </CarouselContent>
+                  <div className="flex justify-center gap-4 mt-4">
+                    <CarouselPrevious />
+                    <CarouselNext />
+                  </div>
+                </Carousel>
+              </div>
             )}
           </section>
         </div>
