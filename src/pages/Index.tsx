@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { CategoryNav } from "@/components/CategoryNav";
@@ -15,6 +15,12 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 
 const categories = [
   "Top Stories",
@@ -26,12 +32,45 @@ const categories = [
 
 const Index = () => {
   const [activeCategory, setActiveCategory] = useState("Top Stories");
+  const [userPreferences, setUserPreferences] = useState<string[]>([]);
+
+  useEffect(() => {
+    loadUserPreferences();
+  }, []);
+
+  const loadUserPreferences = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('preferred_categories')
+        .eq('id', user.id)
+        .single();
+      
+      if (profile?.preferred_categories) {
+        setUserPreferences(profile.preferred_categories);
+      }
+    }
+  };
 
   const { data: news, isLoading: isLoadingNews } = useQuery({
     queryKey: ['news', activeCategory],
     queryFn: () => fetchNews(activeCategory),
     staleTime: 5 * 60 * 1000,
     refetchOnWindowFocus: false,
+  });
+
+  const { data: bookmarks, isLoading: isLoadingBookmarks } = useQuery({
+    queryKey: ['bookmarks'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data;
+    },
   });
 
   const { data: specialEvents, isLoading: isLoadingEvents } = useQuery({
@@ -47,51 +86,24 @@ const Index = () => {
     },
   });
 
-  const isLoading = isLoadingNews || isLoadingEvents;
-
-  // Sample calendar events - in a real app, these would come from an API
-  const calendarEvents = [
-    {
-      id: 1,
-      title: "New Year's Day",
-      date: "2024-01-01",
-      description: "The first day of the new year, celebrated worldwide with festivities and resolutions.",
-      type: "Holiday"
-    },
-    {
-      id: 2,
-      title: "Earth Day",
-      date: "2024-04-22",
-      description: "Annual event demonstrating support for environmental protection worldwide.",
-      type: "Environmental"
-    },
-  ];
+  const isLoading = isLoadingNews || isLoadingEvents || isLoadingBookmarks;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <header className="bg-primary text-primary-foreground py-6">
-        <div className="container">
-          <h1 className="text-3xl font-bold text-center">Airnews</h1>
-          <p className="text-center mt-2 text-primary-foreground/80">
-            Your daily dose of news and events
-          </p>
-        </div>
-      </header>
-
       <main className="container py-6">
         <div className="space-y-8">
           {/* Calendar Events Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-4">Important Dates & Holidays</h2>
+            <h2 className="text-2xl font-bold mb-4">Important Dates & Events</h2>
             <ScrollArea className="h-[400px]">
               <div className="space-y-4 pr-4">
-                {calendarEvents.map((event) => (
+                {specialEvents?.map((event) => (
                   <CalendarCard
                     key={event.id}
                     title={event.title}
-                    date={event.date}
+                    date={event.event_date}
                     description={event.description}
-                    type={event.type}
+                    type="Event"
                   />
                 ))}
               </div>
@@ -102,58 +114,91 @@ const Index = () => {
 
           {/* News Section */}
           <section>
-            <h2 className="text-2xl font-bold mb-4">Latest News</h2>
-            <CategoryNav
-              categories={categories}
-              activeCategory={activeCategory}
-              onCategoryChange={setActiveCategory}
-            />
+            <Tabs defaultValue="latest" className="w-full">
+              <TabsList className="mb-4">
+                <TabsTrigger value="latest">Latest News</TabsTrigger>
+                <TabsTrigger value="bookmarks">My Bookmarks</TabsTrigger>
+              </TabsList>
 
-            {isLoading ? (
-              <div className="flex justify-center py-12">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-              </div>
-            ) : (
-              <div className="max-w-4xl mx-auto px-4">
-                <Carousel className="w-full">
-                  <CarouselContent>
-                    {specialEvents?.map((event) => (
-                      <CarouselItem key={event.id}>
-                        <NewsCard
-                          article={{
-                            id: event.id,
-                            type: 'special',
-                            sectionId: 'events',
-                            webTitle: event.title,
-                            webPublicationDate: event.event_date,
-                            webUrl: '#',
-                            fields: {
-                              thumbnail: event.image_url,
-                              bodyText: event.description,
-                              trailText: event.description,
-                            },
-                          }}
-                          category="Special Event"
-                        />
-                      </CarouselItem>
-                    ))}
-                    
-                    {news?.map((article) => (
-                      <CarouselItem key={article.id}>
-                        <NewsCard
-                          article={article}
-                          category={activeCategory}
-                        />
-                      </CarouselItem>
-                    ))}
-                  </CarouselContent>
-                  <div className="flex justify-center gap-4 mt-4">
-                    <CarouselPrevious />
-                    <CarouselNext />
+              <TabsContent value="latest">
+                <h2 className="text-2xl font-bold mb-4">Latest News</h2>
+                <CategoryNav
+                  categories={categories}
+                  activeCategory={activeCategory}
+                  onCategoryChange={setActiveCategory}
+                />
+
+                {isLoading ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
                   </div>
-                </Carousel>
-              </div>
-            )}
+                ) : (
+                  <div className="max-w-4xl mx-auto px-4">
+                    <Carousel className="w-full">
+                      <CarouselContent>
+                        {specialEvents?.map((event) => (
+                          <CarouselItem key={event.id}>
+                            <NewsCard
+                              article={{
+                                id: event.id,
+                                type: 'special',
+                                sectionId: 'events',
+                                webTitle: event.title,
+                                webPublicationDate: event.event_date,
+                                webUrl: '#',
+                                fields: {
+                                  thumbnail: event.image_url,
+                                  bodyText: event.description,
+                                  trailText: event.description,
+                                },
+                              }}
+                              category="Special Event"
+                            />
+                          </CarouselItem>
+                        ))}
+                        
+                        {news?.map((article) => (
+                          <CarouselItem key={article.id}>
+                            <NewsCard
+                              article={article}
+                              category={activeCategory}
+                            />
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <div className="flex justify-center gap-4 mt-4">
+                        <CarouselPrevious />
+                        <CarouselNext />
+                      </div>
+                    </Carousel>
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="bookmarks">
+                <h2 className="text-2xl font-bold mb-4">My Bookmarks</h2>
+                {isLoadingBookmarks ? (
+                  <div className="flex justify-center py-12">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {bookmarks?.map((bookmark) => (
+                      <NewsCard
+                        key={bookmark.id}
+                        article={bookmark.article_data}
+                        category={bookmark.article_data.sectionId}
+                      />
+                    ))}
+                    {bookmarks?.length === 0 && (
+                      <p className="text-center text-gray-500 py-12">
+                        No bookmarks yet. Start saving articles you want to read later!
+                      </p>
+                    )}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
           </section>
         </div>
       </main>

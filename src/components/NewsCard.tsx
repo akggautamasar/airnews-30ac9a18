@@ -1,9 +1,12 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Share2, Clock } from "lucide-react";
+import { ExternalLink, Share2, Clock, Bookmark, BookmarkCheck } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { motion } from "framer-motion";
 import { GuardianArticle } from "@/utils/newsApi";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface NewsCardProps {
   article: GuardianArticle;
@@ -12,6 +15,26 @@ interface NewsCardProps {
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
   const { toast } = useToast();
+  const [isBookmarked, setIsBookmarked] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    checkIfBookmarked();
+  }, [article.id]);
+
+  const checkIfBookmarked = async () => {
+    try {
+      const { data: bookmarks } = await supabase
+        .from('bookmarks')
+        .select('id')
+        .eq('article_id', article.id)
+        .single();
+      
+      setIsBookmarked(!!bookmarks);
+    } catch (error) {
+      console.error('Error checking bookmark:', error);
+    }
+  };
 
   // Early return if article or required fields are undefined
   if (!article?.fields) {
@@ -56,6 +79,42 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     }
   };
 
+  const handleBookmark = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (loading) return;
+    
+    setLoading(true);
+    try {
+      if (isBookmarked) {
+        const { error } = await supabase
+          .from('bookmarks')
+          .delete()
+          .eq('article_id', article.id);
+        
+        if (error) throw error;
+        toast.success("Article removed from bookmarks");
+      } else {
+        const { error } = await supabase
+          .from('bookmarks')
+          .insert({
+            article_id: article.id,
+            article_data: article
+          });
+        
+        if (error) throw error;
+        toast.success("Article bookmarked successfully");
+      }
+      setIsBookmarked(!isBookmarked);
+    } catch (error) {
+      console.error('Error toggling bookmark:', error);
+      toast.error("Error updating bookmark");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <a href={article.webUrl} target="_blank" rel="noopener noreferrer" className="block hover:no-underline">
       <motion.div
@@ -83,6 +142,17 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
               <div className="flex items-start justify-between gap-2">
                 <h2 className="text-xl font-bold mb-3 line-clamp-2">{article.webTitle}</h2>
                 <div className="flex gap-2">
+                  <button
+                    onClick={handleBookmark}
+                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                    disabled={loading}
+                  >
+                    {isBookmarked ? (
+                      <BookmarkCheck className="h-5 w-5 text-primary" />
+                    ) : (
+                      <Bookmark className="h-5 w-5 text-gray-500" />
+                    )}
+                  </button>
                   <button
                     onClick={handleShare}
                     className="p-2 hover:bg-gray-100 rounded-full transition-colors"
