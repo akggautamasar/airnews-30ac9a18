@@ -3,7 +3,7 @@ import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { CategoryNav } from "@/components/CategoryNav";
 import { useQuery } from "@tanstack/react-query";
-import { fetchNews } from "@/utils/newsApi";
+import { fetchNews, GuardianArticle } from "@/utils/newsApi";
 import { supabase } from "@/integrations/supabase/client";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
@@ -186,7 +186,7 @@ const Index = () => {
                     {bookmarks?.map((bookmark) => (
                       <NewsCard
                         key={bookmark.id}
-                        article={bookmark.article_data}
+                        article={bookmark.article_data as unknown as GuardianArticle}
                         category={bookmark.article_data.sectionId}
                       />
                     ))}

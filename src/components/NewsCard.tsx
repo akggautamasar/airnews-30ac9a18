@@ -1,12 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ExternalLink, Share2, Clock, Bookmark, BookmarkCheck } from "lucide-react";
-import { useToast } from "@/components/ui/use-toast";
+import { toast } from "sonner";
 import { motion } from "framer-motion";
 import { GuardianArticle } from "@/utils/newsApi";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 
 interface NewsCardProps {
   article: GuardianArticle;
@@ -14,7 +13,6 @@ interface NewsCardProps {
 }
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
-  const { toast } = useToast();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -72,10 +70,7 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
       }
     } else {
       navigator.clipboard.writeText(`${article.webTitle}\n\n${summary}\n\n${article.webUrl}`);
-      toast({
-        description: "Link copied to clipboard!",
-        duration: 2000,
-      });
+      toast("Link copied to clipboard!");
     }
   };
 
@@ -94,22 +89,22 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
           .eq('article_id', article.id);
         
         if (error) throw error;
-        toast.success("Article removed from bookmarks");
+        toast("Article removed from bookmarks");
       } else {
         const { error } = await supabase
           .from('bookmarks')
           .insert({
             article_id: article.id,
-            article_data: article
+            article_data: article as unknown as Json
           });
         
         if (error) throw error;
-        toast.success("Article bookmarked successfully");
+        toast("Article bookmarked successfully");
       }
       setIsBookmarked(!isBookmarked);
     } catch (error) {
       console.error('Error toggling bookmark:', error);
-      toast.error("Error updating bookmark");
+      toast("Error updating bookmark");
     } finally {
       setLoading(false);
     }
