@@ -47,7 +47,7 @@ const Index = () => {
   const { data: newsData, isLoading, error } = useQuery({
     queryKey: ['news', selectedCategory],
     queryFn: async () => {
-      const response = await fetch(`/api/fetch-news?category=${selectedCategory}`);
+      const response = await fetch(`/api/fetch-news?category=${encodeURIComponent(selectedCategory)}`);
       if (!response.ok) {
         throw new Error('Failed to fetch news');
       }
@@ -68,7 +68,7 @@ const Index = () => {
       <div className="flex flex-col md:flex-row gap-8">
         <aside className="md:w-1/4">
           <CategoryNav
-            categories={userCategories}
+            categories={categories} // Use the static categories array instead of userCategories
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />

@@ -11,14 +11,26 @@ serve(async (req) => {
     const category = url.searchParams.get('category') || '';
     
     // Map our categories to Guardian sections/tags
-    const guardianSection = category === 'Top Stories' ? 'news' : category.toLowerCase();
+    let guardianSection = category.toLowerCase();
+    if (category === 'Top Stories') {
+      guardianSection = 'news';
+    } else if (category === 'Entertainment') {
+      guardianSection = 'culture';
+    }
     
     const guardianUrl = new URL('https://content.guardianapis.com/search');
     guardianUrl.searchParams.append('api-key', Deno.env.get('GUARDIAN_API_KEY') || '');
-    guardianUrl.searchParams.append('section', guardianSection);
+    
+    // Add section parameter only if it's not Top Stories
+    if (category !== 'Top Stories') {
+      guardianUrl.searchParams.append('section', guardianSection);
+    }
+    
     guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
     guardianUrl.searchParams.append('page-size', '10');
     guardianUrl.searchParams.append('order-by', 'newest');
+
+    console.log('Fetching from Guardian API:', guardianUrl.toString());
 
     const response = await fetch(guardianUrl.toString());
     const data = await response.json();
