@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { NewsCardProps } from "@/types/news";
 import { format } from "date-fns";
+import { Json } from "@/integrations/supabase/types";
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -21,10 +22,26 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
         return;
       }
 
+      // Convert the article to a plain object that matches the Json type
+      const articleData = {
+        id: article.id,
+        type: article.type,
+        sectionId: article.sectionId,
+        sectionName: article.sectionName,
+        webPublicationDate: article.webPublicationDate,
+        webTitle: article.webTitle,
+        webUrl: article.webUrl,
+        apiUrl: article.apiUrl,
+        fields: article.fields,
+        isHosted: article.isHosted,
+        pillarId: article.pillarId,
+        pillarName: article.pillarName
+      } as Json;
+
       const { error } = await supabase.from("bookmarks").insert({
         user_id: session.session.user.id,
         article_id: article.id,
-        article_data: article
+        article_data: articleData
       });
 
       if (error) throw error;
