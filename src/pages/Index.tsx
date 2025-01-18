@@ -3,9 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/hooks/use-toast";
-import CategoryNav from "@/components/CategoryNav";
-import NewsCard from "@/components/NewsCard";
-import CalendarCard from "@/components/CalendarCard";
+import { CategoryNav } from "@/components/CategoryNav";
+import { NewsCard } from "@/components/NewsCard";
+import { CalendarCard } from "@/components/CalendarCard";
 
 const categories = [
   "Top Stories",
@@ -84,7 +84,12 @@ export default function Index() {
             onSelectCategory={setSelectedCategory}
           />
           <div className="mt-8">
-            <CalendarCard />
+            <CalendarCard 
+              title="Upcoming Events"
+              date={new Date()}
+              description="No upcoming events"
+              type="event"
+            />
           </div>
         </aside>
         <main className="md:w-3/4">
@@ -100,7 +105,7 @@ export default function Index() {
                 <NewsCard
                   key={article.id}
                   article={article}
-                  userId={session?.user?.id}
+                  category={selectedCategory}
                 />
               ))
             )}

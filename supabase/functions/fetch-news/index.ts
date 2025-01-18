@@ -1,14 +1,17 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const url = new URL(req.url);
-    const category = url.searchParams.get('category') || '';
+    const { category } = await req.json();
     
     console.log('Received request for category:', category);
     
@@ -34,14 +37,14 @@ serve(async (req) => {
         guardianSection = 'news';
     }
     
-    const guardianUrl = new URL('https://content.guardianapis.com/search');
-    guardianUrl.searchParams.append('api-key', Deno.env.get('GUARDIAN_API_KEY') || '');
-    
-    // Add section parameter only if it's not Top Stories
-    if (category !== 'Top Stories') {
-      guardianUrl.searchParams.append('section', guardianSection);
+    const apiKey = Deno.env.get('GUARDIAN_API_KEY');
+    if (!apiKey) {
+      throw new Error('Guardian API key not configured');
     }
-    
+
+    const guardianUrl = new URL('https://content.guardianapis.com/search');
+    guardianUrl.searchParams.append('api-key', apiKey);
+    guardianUrl.searchParams.append('section', guardianSection);
     guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
     guardianUrl.searchParams.append('page-size', '10');
     guardianUrl.searchParams.append('order-by', 'newest');
