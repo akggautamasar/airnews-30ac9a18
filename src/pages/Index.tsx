@@ -1,113 +1,112 @@
 import { useEffect, useState } from "react";
-import { NewsCard } from "@/components/NewsCard";
-import { CategoryNav } from "@/components/CategoryNav";
-import { CalendarCard } from "@/components/CalendarCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { GuardianArticle } from "@/types/news";
+import { useNavigate } from "react-router-dom";
+import { toast } from "@/hooks/use-toast";
+import CategoryNav from "@/components/CategoryNav";
+import NewsCard from "@/components/NewsCard";
+import CalendarCard from "@/components/CalendarCard";
 
 const categories = [
   "Top Stories",
-  "World",
-  "Business",
   "Technology",
-  "Sports",
+  "Business",
   "Entertainment",
-  "Science",
-  "Health",
+  "Sports",
 ];
 
-const Index = () => {
+export default function Index() {
+  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("Top Stories");
-  const [userCategories, setUserCategories] = useState<string[]>(categories);
+  const [session, setSession] = useState(null);
 
   useEffect(() => {
-    fetchUserPreferences();
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const fetchUserPreferences = async () => {
-    try {
-      const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) return;
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('preferred_categories')
-        .eq('id', session.session.user.id)
-        .single();
-
-      if (profile?.preferred_categories) {
-        setUserCategories(profile.preferred_categories);
-      }
-    } catch (error) {
-      console.error('Error fetching user preferences:', error);
+  useEffect(() => {
+    if (!session) {
+      navigate("/auth");
     }
-  };
+  }, [session, navigate]);
 
   const { data: newsData, isLoading, error } = useQuery({
     queryKey: ['news', selectedCategory],
     queryFn: async () => {
-      const response = await fetch(`/api/fetch-news?category=${encodeURIComponent(selectedCategory)}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch news');
+      try {
+        const response = await supabase.functions.invoke('fetch-news', {
+          body: { category: selectedCategory },
+        });
+
+        if (response.error) {
+          throw new Error(response.error.message || 'Failed to fetch news');
+        }
+
+        return response.data;
+      } catch (error) {
+        console.error('Error fetching news:', error);
+        throw new Error('Failed to fetch news. Please try again later.');
       }
-      const data = await response.json();
-      return data.response;
     },
   });
 
-  const todayEvent = {
-    title: "Today's Highlights",
-    date: new Date(),
-    description: "Stay updated with the latest news and events",
-    type: "reminder" as const,
-  };
+  useEffect(() => {
+    if (error) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to load news. Please try again later.",
+      });
+    }
+  }, [error]);
+
+  if (!session) {
+    return null;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-8">
         <aside className="md:w-1/4">
           <CategoryNav
-            categories={categories} // Use the static categories array instead of userCategories
+            categories={categories}
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
           <div className="mt-8">
-            <CalendarCard {...todayEvent} />
+            <CalendarCard />
           </div>
         </aside>
-        
         <main className="md:w-3/4">
-          <h1 className="text-3xl font-bold mb-8">{selectedCategory}</h1>
-          
-          {isLoading ? (
-            <div className="space-y-4">
-              {[1, 2, 3].map((n) => (
-                <div
-                  key={n}
-                  className="w-full h-64 bg-gray-200 rounded-lg animate-pulse"
-                />
-              ))}
-            </div>
-          ) : error ? (
-            <div className="text-center py-8">
-              <p className="text-red-500">Failed to load news. Please try again later.</p>
-            </div>
-          ) : (
-            <div className="space-y-6">
-              {newsData?.results?.map((article: GuardianArticle) => (
+          <div className="grid gap-6">
+            {isLoading ? (
+              <div className="text-center">Loading news...</div>
+            ) : error ? (
+              <div className="text-center text-red-500">
+                Failed to load news. Please try again later.
+              </div>
+            ) : (
+              newsData?.response?.results?.map((article) => (
                 <NewsCard
                   key={article.id}
                   article={article}
-                  category={selectedCategory}
+                  userId={session?.user?.id}
                 />
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </main>
       </div>
     </div>
   );
-};
-
-export default Index;
+}

@@ -10,12 +10,28 @@ serve(async (req) => {
     const url = new URL(req.url);
     const category = url.searchParams.get('category') || '';
     
+    console.log('Received request for category:', category);
+    
     // Map our categories to Guardian sections/tags
     let guardianSection = category.toLowerCase();
-    if (category === 'Top Stories') {
-      guardianSection = 'news';
-    } else if (category === 'Entertainment') {
-      guardianSection = 'culture';
+    switch(category) {
+      case 'Top Stories':
+        guardianSection = 'news';
+        break;
+      case 'Entertainment':
+        guardianSection = 'culture';
+        break;
+      case 'Technology':
+        guardianSection = 'technology';
+        break;
+      case 'Sports':
+        guardianSection = 'sport';
+        break;
+      case 'Business':
+        guardianSection = 'business';
+        break;
+      default:
+        guardianSection = 'news';
     }
     
     const guardianUrl = new URL('https://content.guardianapis.com/search');
@@ -36,8 +52,11 @@ serve(async (req) => {
     const data = await response.json();
 
     if (!response.ok) {
+      console.error('Guardian API error:', data);
       throw new Error(`Guardian API error: ${data.message || 'Unknown error'}`);
     }
+
+    console.log('Successfully fetched news data');
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
