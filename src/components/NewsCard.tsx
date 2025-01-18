@@ -1,186 +1,100 @@
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Share2, Clock, Bookmark, BookmarkCheck } from "lucide-react";
-import { toast } from "sonner";
-import { motion } from "framer-motion";
-import { GuardianArticle } from "@/utils/newsApi";
+import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Bookmark } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
-import type { Json } from "@/integrations/supabase/types";
-
-interface NewsCardProps {
-  article: GuardianArticle;
-  category: string;
-}
+import { toast } from "sonner";
+import { NewsCardProps } from "@/types/news";
+import { format } from "date-fns";
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [isBookmarking, setIsBookmarking] = useState(false);
 
-  useEffect(() => {
-    checkIfBookmarked();
-  }, [article.id]);
-
-  const checkIfBookmarked = async () => {
+  const handleBookmark = async () => {
     try {
+      setIsBookmarking(true);
       const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) return;
-
-      const { data: bookmarks } = await supabase
-        .from('bookmarks')
-        .select('id')
-        .eq('article_id', article.id)
-        .eq('user_id', session.session.user.id)
-        .single();
       
-      setIsBookmarked(!!bookmarks);
-    } catch (error) {
-      console.error('Error checking bookmark:', error);
-    }
-  };
-
-  // Early return if article or required fields are undefined
-  if (!article?.fields) {
-    return null;
-  }
-
-  const formatSummary = (text: string) => {
-    const cleanText = text.replace(/\([^)]*\)/g, '');
-    const sentences = cleanText.split(/[.!?]+/);
-    return sentences.slice(0, 2).join('. ').trim() + '.';
-  };
-
-  const calculateReadingTime = (text: string): number => {
-    const wordsPerMinute = 200;
-    const words = text.split(/\s+/).length;
-    return Math.ceil(words / wordsPerMinute);
-  };
-
-  const summary = article.fields.trailText || formatSummary(article.fields.bodyText || '');
-  const readingTime = calculateReadingTime(article.fields.bodyText || '');
-
-  const handleShare = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: article.webTitle,
-          text: summary,
-          url: article.webUrl,
-        });
-      } catch (error) {
-        console.error('Error sharing:', error);
+      if (!session?.session?.user) {
+        toast.error("Please sign in to bookmark articles");
+        return;
       }
-    } else {
-      navigator.clipboard.writeText(`${article.webTitle}\n\n${summary}\n\n${article.webUrl}`);
-      toast("Link copied to clipboard!");
-    }
-  };
 
-  const handleBookmark = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    
-    if (loading) return;
-    
-    const { data: session } = await supabase.auth.getSession();
-    if (!session?.session?.user) {
-      toast("Please sign in to bookmark articles");
-      return;
-    }
-    
-    setLoading(true);
-    try {
-      if (isBookmarked) {
-        const { error } = await supabase
-          .from('bookmarks')
-          .delete()
-          .eq('article_id', article.id)
-          .eq('user_id', session.session.user.id);
-        
-        if (error) throw error;
-        toast("Article removed from bookmarks");
-      } else {
-        const { error } = await supabase
-          .from('bookmarks')
-          .insert({
-            article_id: article.id,
-            article_data: article as unknown as Json,
-            user_id: session.session.user.id
-          });
-        
-        if (error) throw error;
-        toast("Article bookmarked successfully");
-      }
-      setIsBookmarked(!isBookmarked);
+      const { error } = await supabase.from("bookmarks").insert({
+        user_id: session.session.user.id,
+        article_id: article.id,
+        article_data: article
+      });
+
+      if (error) throw error;
+      
+      setIsBookmarked(true);
+      toast.success("Article bookmarked successfully");
     } catch (error) {
-      console.error('Error toggling bookmark:', error);
-      toast("Error updating bookmark");
+      console.error("Error bookmarking article:", error);
+      toast.error("Failed to bookmark article");
     } finally {
-      setLoading(false);
+      setIsBookmarking(false);
     }
   };
 
   return (
-    <a href={article.webUrl} target="_blank" rel="noopener noreferrer" className="block hover:no-underline">
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-      >
-        <Card className="w-full max-w-2xl mx-auto overflow-hidden hover:shadow-lg transition-shadow duration-200">
-          <div className="flex flex-col md:flex-row">
-            <div className="md:w-2/5 relative">
-              <img
-                src={article.fields.thumbnail || '/placeholder.svg'}
-                alt={article.webTitle}
-                className="w-full h-48 md:h-full object-cover"
-              />
-              <Badge className="absolute top-2 left-2 bg-primary text-primary-foreground">
-                {category}
-              </Badge>
-              <div className="absolute bottom-2 left-2 flex items-center gap-1 bg-black/50 text-white px-2 py-1 rounded-full text-sm">
-                <Clock className="h-4 w-4" />
-                <span>{readingTime} min read</span>
-              </div>
-            </div>
-            <div className="md:w-3/5 p-6">
-              <div className="flex items-start justify-between gap-2">
-                <h2 className="text-xl font-bold mb-3 line-clamp-2">{article.webTitle}</h2>
-                <div className="flex gap-2">
-                  <button
-                    onClick={handleBookmark}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                    disabled={loading}
-                  >
-                    {isBookmarked ? (
-                      <BookmarkCheck className="h-5 w-5 text-primary" />
-                    ) : (
-                      <Bookmark className="h-5 w-5 text-gray-500" />
-                    )}
-                  </button>
-                  <button
-                    onClick={handleShare}
-                    className="p-2 hover:bg-gray-100 rounded-full transition-colors"
-                  >
-                    <Share2 className="h-5 w-5 text-gray-500" />
-                  </button>
-                  <ExternalLink className="h-5 w-5 flex-shrink-0 text-gray-400 mt-2" />
-                </div>
-              </div>
-              <p className="text-gray-600 mb-4 text-base leading-relaxed">
-                {summary}
-              </p>
-              <div className="flex justify-between items-center text-sm text-gray-500">
-                <span>The Guardian</span>
-                <span>{new Date(article.webPublicationDate).toLocaleDateString()}</span>
-              </div>
-            </div>
+    <Card>
+      <CardHeader>
+        <div className="flex justify-between items-start">
+          <div>
+            <CardTitle className="text-xl font-bold">
+              <a
+                href={article.webUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:text-primary transition-colors"
+              >
+                {article.webTitle}
+              </a>
+            </CardTitle>
+            <p className="text-sm text-muted-foreground mt-1">
+              {format(new Date(article.webPublicationDate), 'PPP')}
+            </p>
           </div>
-        </Card>
-      </motion.div>
-    </a>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleBookmark}
+            disabled={isBookmarking || isBookmarked}
+          >
+            <Bookmark
+              className={`h-5 w-5 ${isBookmarked ? "fill-primary" : ""}`}
+            />
+          </Button>
+        </div>
+      </CardHeader>
+      <CardContent>
+        {article.fields?.thumbnail && (
+          <img
+            src={article.fields.thumbnail}
+            alt={article.webTitle}
+            className="w-full h-48 object-cover rounded-md mb-4"
+          />
+        )}
+        <p className="text-muted-foreground">
+          {article.fields?.bodyText?.slice(0, 200)}...
+        </p>
+        <div className="mt-4 flex items-center justify-between">
+          <span className="text-sm font-medium text-primary">
+            {article.sectionName || category}
+          </span>
+          <a
+            href={article.webUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline"
+          >
+            Read more
+          </a>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

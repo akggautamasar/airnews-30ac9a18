@@ -4,7 +4,7 @@ import { CategoryNav } from "@/components/CategoryNav";
 import { CalendarCard } from "@/components/CalendarCard";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import type { GuardianArticle } from "@/utils/newsApi";
+import type { GuardianArticle } from "@/types/news";
 
 const categories = [
   "Top Stories",
@@ -56,9 +56,12 @@ const Index = () => {
     },
   });
 
-  if (error) {
-    console.error('Error fetching news:', error);
-  }
+  const todayEvent = {
+    title: "Today's Highlights",
+    date: new Date(),
+    description: "Stay updated with the latest news and events",
+    type: "reminder" as const,
+  };
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -70,7 +73,7 @@ const Index = () => {
             onSelectCategory={setSelectedCategory}
           />
           <div className="mt-8">
-            <CalendarCard />
+            <CalendarCard {...todayEvent} />
           </div>
         </aside>
         
