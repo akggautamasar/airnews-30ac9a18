@@ -1,207 +1,108 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { NewsCard } from "@/components/NewsCard";
-import { CalendarCard } from "@/components/CalendarCard";
 import { CategoryNav } from "@/components/CategoryNav";
+import { CalendarCard } from "@/components/CalendarCard";
 import { useQuery } from "@tanstack/react-query";
-import { fetchNews, GuardianArticle } from "@/utils/newsApi";
 import { supabase } from "@/integrations/supabase/client";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { Loader2 } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
-import {
-  Carousel,
-  CarouselContent,
-  CarouselItem,
-  CarouselNext,
-  CarouselPrevious,
-} from "@/components/ui/carousel";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import type { GuardianArticle } from "@/utils/newsApi";
 
 const categories = [
   "Top Stories",
-  "Technology",
+  "World",
   "Business",
-  "Sport",
-  "Culture",
+  "Technology",
+  "Sports",
+  "Entertainment",
+  "Science",
+  "Health",
 ];
 
 const Index = () => {
-  const [activeCategory, setActiveCategory] = useState("Top Stories");
-  const [userPreferences, setUserPreferences] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState("Top Stories");
+  const [userCategories, setUserCategories] = useState<string[]>(categories);
 
   useEffect(() => {
-    loadUserPreferences();
+    fetchUserPreferences();
   }, []);
 
-  const loadUserPreferences = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
+  const fetchUserPreferences = async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) return;
+
       const { data: profile } = await supabase
         .from('profiles')
         .select('preferred_categories')
-        .eq('id', user.id)
+        .eq('id', session.session.user.id)
         .single();
-      
+
       if (profile?.preferred_categories) {
-        setUserPreferences(profile.preferred_categories);
+        setUserCategories(profile.preferred_categories);
       }
+    } catch (error) {
+      console.error('Error fetching user preferences:', error);
     }
   };
 
-  const { data: news, isLoading: isLoadingNews } = useQuery({
-    queryKey: ['news', activeCategory],
-    queryFn: () => fetchNews(activeCategory),
-    staleTime: 5 * 60 * 1000,
-    refetchOnWindowFocus: false,
-  });
-
-  const { data: bookmarks, isLoading: isLoadingBookmarks } = useQuery({
-    queryKey: ['bookmarks'],
+  const { data: newsData, isLoading, error } = useQuery({
+    queryKey: ['news', selectedCategory],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('bookmarks')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data;
+      const response = await fetch(`/api/fetch-news?category=${selectedCategory}`);
+      if (!response.ok) {
+        throw new Error('Failed to fetch news');
+      }
+      const data = await response.json();
+      return data.response;
     },
   });
 
-  const { data: specialEvents, isLoading: isLoadingEvents } = useQuery({
-    queryKey: ['special-events'],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from('special_events')
-        .select('*')
-        .order('event_date', { ascending: true });
-      
-      if (error) throw error;
-      return data;
-    },
-  });
-
-  const isLoading = isLoadingNews || isLoadingEvents || isLoadingBookmarks;
+  if (error) {
+    console.error('Error fetching news:', error);
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <main className="container py-6">
-        <div className="space-y-8">
-          {/* Calendar Events Section */}
-          <section>
-            <h2 className="text-2xl font-bold mb-4">Important Dates & Events</h2>
-            <ScrollArea className="h-[400px]">
-              <div className="space-y-4 pr-4">
-                {specialEvents?.map((event) => (
-                  <CalendarCard
-                    key={event.id}
-                    title={event.title}
-                    date={event.event_date}
-                    description={event.description}
-                    type="Event"
-                  />
-                ))}
-              </div>
-            </ScrollArea>
-          </section>
-
-          <Separator className="my-8" />
-
-          {/* News Section */}
-          <section>
-            <Tabs defaultValue="latest" className="w-full">
-              <TabsList className="mb-4">
-                <TabsTrigger value="latest">Latest News</TabsTrigger>
-                <TabsTrigger value="bookmarks">My Bookmarks</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="latest">
-                <h2 className="text-2xl font-bold mb-4">Latest News</h2>
-                <CategoryNav
-                  categories={categories}
-                  activeCategory={activeCategory}
-                  onCategoryChange={setActiveCategory}
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex flex-col md:flex-row gap-8">
+        <aside className="md:w-1/4">
+          <CategoryNav
+            categories={userCategories}
+            selectedCategory={selectedCategory}
+            onSelectCategory={setSelectedCategory}
+          />
+          <div className="mt-8">
+            <CalendarCard />
+          </div>
+        </aside>
+        
+        <main className="md:w-3/4">
+          <h1 className="text-3xl font-bold mb-8">{selectedCategory}</h1>
+          
+          {isLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map((n) => (
+                <div
+                  key={n}
+                  className="w-full h-64 bg-gray-200 rounded-lg animate-pulse"
                 />
-
-                {isLoading ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
-                  <div className="max-w-4xl mx-auto px-4">
-                    <Carousel className="w-full">
-                      <CarouselContent>
-                        {specialEvents?.map((event) => (
-                          <CarouselItem key={event.id}>
-                            <NewsCard
-                              article={{
-                                id: event.id,
-                                type: 'special',
-                                sectionId: 'events',
-                                webTitle: event.title,
-                                webPublicationDate: event.event_date,
-                                webUrl: '#',
-                                fields: {
-                                  thumbnail: event.image_url,
-                                  bodyText: event.description,
-                                  trailText: event.description,
-                                },
-                              }}
-                              category="Special Event"
-                            />
-                          </CarouselItem>
-                        ))}
-                        
-                        {news?.map((article) => (
-                          <CarouselItem key={article.id}>
-                            <NewsCard
-                              article={article}
-                              category={activeCategory}
-                            />
-                          </CarouselItem>
-                        ))}
-                      </CarouselContent>
-                      <div className="flex justify-center gap-4 mt-4">
-                        <CarouselPrevious />
-                        <CarouselNext />
-                      </div>
-                    </Carousel>
-                  </div>
-                )}
-              </TabsContent>
-
-              <TabsContent value="bookmarks">
-                <h2 className="text-2xl font-bold mb-4">My Bookmarks</h2>
-                {isLoadingBookmarks ? (
-                  <div className="flex justify-center py-12">
-                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                  </div>
-                ) : (
-                  <div className="space-y-6">
-                    {bookmarks?.map((bookmark) => (
-                      <NewsCard
-                        key={bookmark.id}
-                        article={bookmark.article_data as unknown as GuardianArticle}
-                        category={bookmark.article_data.sectionId}
-                      />
-                    ))}
-                    {bookmarks?.length === 0 && (
-                      <p className="text-center text-gray-500 py-12">
-                        No bookmarks yet. Start saving articles you want to read later!
-                      </p>
-                    )}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </section>
-        </div>
-      </main>
+              ))}
+            </div>
+          ) : error ? (
+            <div className="text-center py-8">
+              <p className="text-red-500">Failed to load news. Please try again later.</p>
+            </div>
+          ) : (
+            <div className="space-y-6">
+              {newsData?.results?.map((article: GuardianArticle) => (
+                <NewsCard
+                  key={article.id}
+                  article={article}
+                  category={selectedCategory}
+                />
+              ))}
+            </div>
+          )}
+        </main>
+      </div>
     </div>
   );
 };

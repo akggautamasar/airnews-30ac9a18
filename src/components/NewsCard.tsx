@@ -6,6 +6,7 @@ import { motion } from "framer-motion";
 import { GuardianArticle } from "@/utils/newsApi";
 import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect } from "react";
+import type { Json } from "@/integrations/supabase/types";
 
 interface NewsCardProps {
   article: GuardianArticle;
@@ -22,10 +23,14 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
 
   const checkIfBookmarked = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) return;
+
       const { data: bookmarks } = await supabase
         .from('bookmarks')
         .select('id')
         .eq('article_id', article.id)
+        .eq('user_id', session.session.user.id)
         .single();
       
       setIsBookmarked(!!bookmarks);
@@ -80,13 +85,20 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     
     if (loading) return;
     
+    const { data: session } = await supabase.auth.getSession();
+    if (!session?.session?.user) {
+      toast("Please sign in to bookmark articles");
+      return;
+    }
+    
     setLoading(true);
     try {
       if (isBookmarked) {
         const { error } = await supabase
           .from('bookmarks')
           .delete()
-          .eq('article_id', article.id);
+          .eq('article_id', article.id)
+          .eq('user_id', session.session.user.id);
         
         if (error) throw error;
         toast("Article removed from bookmarks");
@@ -95,7 +107,8 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
           .from('bookmarks')
           .insert({
             article_id: article.id,
-            article_data: article as unknown as Json
+            article_data: article as unknown as Json,
+            user_id: session.session.user.id
           });
         
         if (error) throw error;
