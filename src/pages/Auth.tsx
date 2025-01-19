@@ -47,20 +47,21 @@ const Auth = () => {
   });
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (event, session) => {
-        if (event === "SIGNED_IN" && session) {
-          setSession(session);
-          setShowProfileForm(true);
-          
-          // Fetch existing profile data
-          const { data: profile, error: profileError } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', session.user.id)
-            .single();
-            
-          if (profile && !profileError) {
+    const checkSession = async () => {
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
+      if (currentSession) {
+        setSession(currentSession);
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', currentSession.user.id)
+          .single();
+
+        if (profile) {
+          if (profile.display_name && profile.mobile_number) {
+            navigate("/");
+          } else {
+            setShowProfileForm(true);
             form.reset({
               display_name: profile.display_name || "",
               mobile_number: profile.mobile_number || "",
@@ -68,15 +69,43 @@ const Auth = () => {
               location: profile.location || "",
               interests: profile.interests?.join(', ') || "",
             });
+          }
+        }
+      }
+    };
 
-            // If profile is complete, redirect to home
+    checkSession();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (event === "SIGNED_IN" && session) {
+          setSession(session);
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profile) {
             if (profile.display_name && profile.mobile_number) {
               navigate("/");
+            } else {
+              setShowProfileForm(true);
+              form.reset({
+                display_name: profile.display_name || "",
+                mobile_number: profile.mobile_number || "",
+                date_of_birth: profile.date_of_birth || "",
+                location: profile.location || "",
+                interests: profile.interests?.join(', ') || "",
+              });
             }
+          } else {
+            setShowProfileForm(true);
           }
         } else if (event === "SIGNED_OUT") {
           setSession(null);
           setShowProfileForm(false);
+          form.reset();
           navigate("/auth");
         }
       }
@@ -119,7 +148,8 @@ const Auth = () => {
       if (error) throw error;
 
       toast.success("Profile updated successfully!");
-      navigate("/"); // Redirect to home page after successful profile update
+      await new Promise(resolve => setTimeout(resolve, 500)); // Small delay to ensure toast is visible
+      navigate("/");
     } catch (error) {
       console.error('Profile update error:', error);
       setErrorMessage(error.message || "Error updating profile. Please try again.");
