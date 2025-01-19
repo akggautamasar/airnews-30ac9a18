@@ -22,13 +22,20 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
         return;
       }
 
-      // Convert the article object to a plain JSON object
+      // Create a serializable version of the article
       const articleData = {
-        ...article,
-        fields: article.fields || {},
+        id: article.id,
         type: article.type || "",
         sectionId: article.sectionId || "",
+        sectionName: article.sectionName || "",
+        webPublicationDate: article.webPublicationDate,
+        webTitle: article.webTitle,
+        webUrl: article.webUrl,
         apiUrl: article.apiUrl || "",
+        fields: {
+          thumbnail: article.fields?.thumbnail || "",
+          bodyText: article.fields?.bodyText || ""
+        },
         isHosted: article.isHosted || false,
         pillarId: article.pillarId || "",
         pillarName: article.pillarName || ""
