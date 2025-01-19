@@ -35,3 +35,8 @@ export interface GuardianArticle {
   pillarId?: string;
   pillarName?: string;
 }
+
+export interface UserPreferences {
+  view_mode: 'card' | 'list';
+  categories: string[];
+}

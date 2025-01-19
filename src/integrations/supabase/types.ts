@@ -51,6 +51,7 @@ export type Database = {
           interests: string[] | null
           location: string | null
           mobile_number: string | null
+          news_preferences: Json | null
           preferred_categories: string[] | null
           social_links: Json | null
         }
@@ -63,6 +64,7 @@ export type Database = {
           interests?: string[] | null
           location?: string | null
           mobile_number?: string | null
+          news_preferences?: Json | null
           preferred_categories?: string[] | null
           social_links?: Json | null
         }
@@ -75,10 +77,46 @@ export type Database = {
           interests?: string[] | null
           location?: string | null
           mobile_number?: string | null
+          news_preferences?: Json | null
           preferred_categories?: string[] | null
           social_links?: Json | null
         }
         Relationships: []
+      }
+      saved_articles: {
+        Row: {
+          article_data: Json
+          id: string
+          is_bookmarked: boolean | null
+          is_read: boolean | null
+          saved_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          article_data: Json
+          id?: string
+          is_bookmarked?: boolean | null
+          is_read?: boolean | null
+          saved_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          article_data?: Json
+          id?: string
+          is_bookmarked?: boolean | null
+          is_read?: boolean | null
+          saved_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_articles_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       special_events: {
         Row: {
