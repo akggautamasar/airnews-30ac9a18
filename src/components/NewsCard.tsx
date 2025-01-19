@@ -22,9 +22,21 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
         return;
       }
 
+      // Convert the article object to a plain JSON object
+      const articleData = {
+        ...article,
+        fields: article.fields || {},
+        type: article.type || "",
+        sectionId: article.sectionId || "",
+        apiUrl: article.apiUrl || "",
+        isHosted: article.isHosted || false,
+        pillarId: article.pillarId || "",
+        pillarName: article.pillarName || ""
+      };
+
       const { error } = await supabase.from("saved_articles").insert({
         user_id: session.session.user.id,
-        article_data: article,
+        article_data: articleData,
         is_bookmarked: true
       });
 
