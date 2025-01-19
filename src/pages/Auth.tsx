@@ -18,7 +18,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import type { AuthError } from "@supabase/supabase-js";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 const profileFormSchema = z.object({
   display_name: z.string().min(2, "Name must be at least 2 characters"),
@@ -68,9 +68,16 @@ const Auth = () => {
               location: profile.location || "",
               interests: profile.interests?.join(', ') || "",
             });
+
+            // If profile is complete, redirect to home
+            if (profile.display_name && profile.mobile_number) {
+              navigate("/");
+            }
           }
         } else if (event === "SIGNED_OUT") {
-          navigate("/");
+          setSession(null);
+          setShowProfileForm(false);
+          navigate("/auth");
         }
       }
     );
@@ -111,20 +118,12 @@ const Auth = () => {
 
       if (error) throw error;
 
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been successfully updated.",
-      });
-      
-      navigate("/");
+      toast.success("Profile updated successfully!");
+      navigate("/"); // Redirect to home page after successful profile update
     } catch (error) {
       console.error('Profile update error:', error);
       setErrorMessage(error.message || "Error updating profile. Please try again.");
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to update profile. Please try again.",
-      });
+      toast.error("Failed to update profile. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
