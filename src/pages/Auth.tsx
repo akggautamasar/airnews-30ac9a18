@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -27,7 +26,6 @@ const profileFormSchema = z.object({
   date_of_birth: z.string().min(1, "Please select your date of birth"),
   location: z.string().min(1, "Please enter your location"),
   interests: z.string().optional(),
-  bio: z.string().optional(),
 });
 
 const Auth = () => {
@@ -45,7 +43,6 @@ const Auth = () => {
       date_of_birth: "",
       location: "",
       interests: "",
-      bio: "",
     },
   });
 
@@ -70,7 +67,6 @@ const Auth = () => {
               date_of_birth: profile.date_of_birth || "",
               location: profile.location || "",
               interests: profile.interests?.join(', ') || "",
-              bio: profile.bio || "",
             });
           }
         } else if (event === "SIGNED_OUT") {
