@@ -19,6 +19,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import type { AuthError } from "@supabase/supabase-js";
+import { toast } from "@/hooks/use-toast";
 
 const profileFormSchema = z.object({
   display_name: z.string().min(2, "Name must be at least 2 characters"),
@@ -34,6 +35,7 @@ const Auth = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [showProfileForm, setShowProfileForm] = useState(false);
   const [session, setSession] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const form = useForm({
     resolver: zodResolver(profileFormSchema),
@@ -53,6 +55,24 @@ const Auth = () => {
         if (event === "SIGNED_IN" && session) {
           setSession(session);
           setShowProfileForm(true);
+          
+          // Fetch existing profile data
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', session.user.id)
+            .single();
+            
+          if (profile && !profileError) {
+            form.reset({
+              display_name: profile.display_name || "",
+              mobile_number: profile.mobile_number || "",
+              date_of_birth: profile.date_of_birth || "",
+              location: profile.location || "",
+              interests: profile.interests?.join(', ') || "",
+              bio: profile.bio || "",
+            });
+          }
         } else if (event === "SIGNED_OUT") {
           navigate("/");
         }
@@ -60,7 +80,7 @@ const Auth = () => {
     );
 
     return () => subscription.unsubscribe();
-  }, [navigate]);
+  }, [navigate, form]);
 
   const getErrorMessage = (error: AuthError) => {
     switch (error.message) {
@@ -75,6 +95,13 @@ const Auth = () => {
 
   const onSubmit = async (data) => {
     try {
+      setIsSubmitting(true);
+      setErrorMessage("");
+
+      if (!session?.user?.id) {
+        throw new Error("No user session found");
+      }
+
       const { error } = await supabase
         .from('profiles')
         .update({
@@ -82,15 +109,28 @@ const Auth = () => {
           mobile_number: data.mobile_number,
           date_of_birth: data.date_of_birth,
           location: data.location,
-          interests: data.interests.split(',').map(i => i.trim()),
-          bio: data.bio,
+          interests: data.interests.split(',').map(i => i.trim()).filter(i => i),
         })
-        .eq('id', session?.user?.id);
+        .eq('id', session.user.id);
 
       if (error) throw error;
+
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been successfully updated.",
+      });
+      
       navigate("/");
     } catch (error) {
-      setErrorMessage("Error updating profile. Please try again.");
+      console.error('Profile update error:', error);
+      setErrorMessage(error.message || "Error updating profile. Please try again.");
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to update profile. Please try again.",
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -201,26 +241,12 @@ const Auth = () => {
                   )}
                 />
 
-                <FormField
-                  control={form.control}
-                  name="bio"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bio</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Tell us a bit about yourself"
-                          className="resize-none"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <Button type="submit" className="w-full">
-                  Complete Profile
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? "Updating..." : "Complete Profile"}
                 </Button>
               </form>
             </Form>
