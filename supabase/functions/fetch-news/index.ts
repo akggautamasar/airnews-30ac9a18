@@ -82,9 +82,8 @@ serve(async (req) => {
       guardianUrl.searchParams.append('section', guardianSection);
     }
     guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
-    guardianUrl.searchParams.append('page-size', '50'); // Maximum allowed by Guardian API
+    guardianUrl.searchParams.append('page-size', '50');
     
-    // For Today's News, use date filter
     if (isToday) {
       const today = new Date().toISOString().split('T')[0];
       guardianUrl.searchParams.append('from-date', today);
@@ -94,29 +93,40 @@ serve(async (req) => {
 
     console.log('Fetching from Guardian API with URL:', guardianUrl.toString());
 
-    const response = await fetch(guardianUrl.toString());
-    if (!response.ok) {
-      const errorData = await response.text();
-      console.error('Guardian API error response:', errorData);
-      throw new Error(`Guardian API error: ${response.statusText}`);
+    try {
+      const response = await fetch(guardianUrl.toString(), {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('Guardian API error response:', errorText);
+        throw new Error(`Guardian API error: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      
+      if (!data.response || !Array.isArray(data.response.results)) {
+        console.error('Invalid Guardian API response format:', data);
+        throw new Error('Invalid response format from Guardian API');
+      }
+
+      console.log('Successfully fetched news data with', data.response.results.length, 'articles');
+
+      return new Response(JSON.stringify(data), {
+        headers: { 
+          ...corsHeaders, 
+          'Content-Type': 'application/json'
+        },
+        status: 200
+      });
+    } catch (fetchError) {
+      console.error('Error fetching from Guardian API:', fetchError);
+      throw new Error(`Failed to fetch from Guardian API: ${fetchError.message}`);
     }
-
-    const data = await response.json();
-    
-    if (!data.response || !Array.isArray(data.response.results)) {
-      console.error('Invalid Guardian API response format:', data);
-      throw new Error('Invalid response format from Guardian API');
-    }
-
-    console.log('Successfully fetched news data with', data.response.results.length, 'articles');
-
-    return new Response(JSON.stringify(data), {
-      headers: { 
-        ...corsHeaders, 
-        "Content-Type": "application/json" 
-      },
-      status: 200
-    });
   } catch (error) {
     console.error('Error in fetch-news function:', error);
     
@@ -131,7 +141,7 @@ serve(async (req) => {
       { 
         headers: { 
           ...corsHeaders, 
-          "Content-Type": "application/json" 
+          'Content-Type': 'application/json'
         },
         status: 500
       }
