@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Bookmark, Share2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,13 +15,7 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
   const handleBookmark = async () => {
     try {
       setIsBookmarking(true);
-      const { data: session } = await supabase.auth.getSession();
       
-      if (!session?.session?.user) {
-        toast.error("Please sign in to bookmark articles");
-        return;
-      }
-
       // Create a serializable version of the article
       const articleData = {
         id: article.id,
@@ -42,7 +36,6 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
       };
 
       const { error } = await supabase.from("saved_articles").insert({
-        user_id: session.session.user.id,
         article_data: articleData,
         is_bookmarked: true
       });
@@ -79,72 +72,62 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="h-[calc(100vh-8rem)] overflow-y-auto"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="h-full w-full"
     >
-      <Card className="h-full">
-        <CardHeader>
-          <div className="flex justify-between items-start">
-            <div>
-              <CardTitle className="text-xl font-bold">
-                <a
-                  href={article.webUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  {article.webTitle}
-                </a>
-              </CardTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {format(new Date(article.webPublicationDate), 'PPP')}
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleBookmark}
-                disabled={isBookmarking || isBookmarked}
-              >
-                <Bookmark
-                  className={`h-5 w-5 ${isBookmarked ? "fill-primary" : ""}`}
-                />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={handleShare}
-              >
-                <Share2 className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {article.fields?.thumbnail && (
+      <Card className="h-full overflow-hidden relative">
+        {article.fields?.thumbnail && (
+          <div className="absolute inset-0 bg-black/20">
             <img
               src={article.fields.thumbnail}
               alt={article.webTitle}
-              className="w-full h-48 object-cover rounded-md mb-4"
+              className="w-full h-full object-cover"
             />
-          )}
-          <p className="text-muted-foreground">
-            {article.fields?.bodyText?.slice(0, 200)}...
-          </p>
-          <div className="mt-4 flex items-center justify-between">
-            <span className="text-sm font-medium text-primary">
-              {article.sectionName || category}
-            </span>
+          </div>
+        )}
+        <CardContent className="relative h-full flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
+          <div className="space-y-4">
+            <h2 className="text-2xl font-bold leading-tight">
+              {article.webTitle}
+            </h2>
+            <p className="text-sm opacity-90 line-clamp-3">
+              {article.fields?.bodyText}
+            </p>
+            <div className="flex items-center justify-between">
+              <span className="text-sm">
+                {format(new Date(article.webPublicationDate), 'PPP')}
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleBookmark}
+                  disabled={isBookmarking || isBookmarked}
+                  className="text-white hover:text-white/80"
+                >
+                  <Bookmark
+                    className={`h-5 w-5 ${isBookmarked ? "fill-white" : ""}`}
+                  />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={handleShare}
+                  className="text-white hover:text-white/80"
+                >
+                  <Share2 className="h-5 w-5" />
+                </Button>
+              </div>
+            </div>
             <a
               href={article.webUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-sm text-primary hover:underline"
+              className="inline-block mt-2 text-sm text-white/90 hover:text-white underline"
             >
-              Read more
+              Read full article
             </a>
           </div>
         </CardContent>

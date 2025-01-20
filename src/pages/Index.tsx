@@ -1,11 +1,10 @@
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/hooks/use-toast";
 import { CategoryNav } from "@/components/CategoryNav";
 import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
+import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 
 const categories = [
   "Top Stories",
@@ -16,29 +15,7 @@ const categories = [
 ];
 
 export default function Index() {
-  const navigate = useNavigate();
   const [selectedCategory, setSelectedCategory] = useState("Top Stories");
-  const [session, setSession] = useState(null);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  useEffect(() => {
-    if (!session) {
-      navigate("/auth");
-    }
-  }, [session, navigate]);
 
   const { data: newsData, isLoading, error } = useQuery({
     queryKey: ['news', selectedCategory],
@@ -60,20 +37,6 @@ export default function Index() {
     },
   });
 
-  useEffect(() => {
-    if (error) {
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: error.message || "Failed to load news. Please try again later.",
-      });
-    }
-  }, [error]);
-
-  if (!session) {
-    return null;
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-8">
@@ -92,24 +55,34 @@ export default function Index() {
             />
           </div>
         </aside>
-        <main className="md:w-3/4">
-          <div className="grid gap-6">
-            {isLoading ? (
-              <div className="text-center">Loading news...</div>
-            ) : error ? (
-              <div className="text-center text-red-500">
-                Failed to load news. Please try again later.
-              </div>
-            ) : (
-              newsData?.response?.results?.map((article) => (
-                <NewsCard
-                  key={article.id}
-                  article={article}
-                  category={selectedCategory}
-                />
-              ))
-            )}
-          </div>
+        <main className="md:w-3/4 h-[calc(100vh-8rem)]">
+          {isLoading ? (
+            <div className="text-center">Loading news...</div>
+          ) : error ? (
+            <div className="text-center text-red-500">
+              Failed to load news. Please try again later.
+            </div>
+          ) : (
+            <Carousel
+              opts={{
+                axis: 'y',
+                dragFree: true,
+              }}
+              className="h-full"
+              orientation="vertical"
+            >
+              <CarouselContent className="-mt-4">
+                {newsData?.response?.results?.map((article) => (
+                  <CarouselItem key={article.id} className="pt-4">
+                    <NewsCard
+                      article={article}
+                      category={selectedCategory}
+                    />
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+            </Carousel>
+          )}
         </main>
       </div>
     </div>
