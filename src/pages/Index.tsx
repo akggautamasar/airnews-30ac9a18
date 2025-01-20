@@ -4,10 +4,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { CategoryNav } from "@/components/CategoryNav";
 import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
-import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 const categories = [
+  "Today's News",
   "Top Stories",
   "Technology",
   "Business",
@@ -16,14 +16,17 @@ const categories = [
 ];
 
 export default function Index() {
-  const [selectedCategory, setSelectedCategory] = useState("Top Stories");
+  const [selectedCategory, setSelectedCategory] = useState("Today's News");
 
   const { data: newsData, isLoading, error } = useQuery({
     queryKey: ['news', selectedCategory],
     queryFn: async () => {
       try {
         const response = await supabase.functions.invoke('fetch-news', {
-          body: { category: selectedCategory },
+          body: { 
+            category: selectedCategory,
+            isToday: selectedCategory === "Today's News"
+          },
         });
 
         if (response.error) {

@@ -11,13 +11,16 @@ serve(async (req) => {
   }
 
   try {
-    const { category } = await req.json();
+    const { category, isToday } = await req.json();
     
-    console.log('Received request for category:', category);
+    console.log('Received request for category:', category, 'isToday:', isToday);
     
     // Map our categories to Guardian sections/tags
     let guardianSection = category.toLowerCase();
     switch(category) {
+      case "Today's News":
+        guardianSection = '';  // Empty to fetch all sections
+        break;
       case 'Top Stories':
         guardianSection = 'news';
         break;
@@ -45,9 +48,20 @@ serve(async (req) => {
 
     const guardianUrl = new URL('https://content.guardianapis.com/search');
     guardianUrl.searchParams.append('api-key', apiKey);
-    guardianUrl.searchParams.append('section', guardianSection);
+    if (guardianSection) {
+      guardianUrl.searchParams.append('section', guardianSection);
+    }
     guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
-    guardianUrl.searchParams.append('page-size', '10');
+    
+    // For Today's News, fetch more articles and use date filter
+    if (isToday) {
+      const today = new Date().toISOString().split('T')[0];
+      guardianUrl.searchParams.append('from-date', today);
+      guardianUrl.searchParams.append('page-size', '50');  // Fetch more articles for today's news
+    } else {
+      guardianUrl.searchParams.append('page-size', '10');
+    }
+    
     guardianUrl.searchParams.append('order-by', 'newest');
 
     console.log('Fetching from Guardian API with URL:', guardianUrl.toString());
@@ -75,7 +89,6 @@ serve(async (req) => {
   } catch (error) {
     console.error('Error in fetch-news function:', error);
     
-    // Return a more detailed error response
     return new Response(
       JSON.stringify({ 
         error: error.message,
