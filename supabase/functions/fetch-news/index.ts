@@ -6,8 +6,12 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
+    return new Response(null, { 
+      headers: corsHeaders,
+      status: 200
+    });
   }
 
   try {
@@ -103,7 +107,11 @@ serve(async (req) => {
     console.log('Successfully fetched news data with', data.response.results.length, 'articles');
 
     return new Response(JSON.stringify(data), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
+      headers: { 
+        ...corsHeaders, 
+        "Content-Type": "application/json" 
+      },
+      status: 200
     });
   } catch (error) {
     console.error('Error in fetch-news function:', error);
@@ -117,7 +125,10 @@ serve(async (req) => {
         }
       }),
       { 
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { 
+          ...corsHeaders, 
+          "Content-Type": "application/json" 
+        },
         status: 500
       }
     );
