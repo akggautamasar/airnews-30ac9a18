@@ -39,6 +39,7 @@ serve(async (req) => {
     
     const apiKey = Deno.env.get('GUARDIAN_API_KEY');
     if (!apiKey) {
+      console.error('Guardian API key not configured');
       throw new Error('Guardian API key not configured');
     }
 
@@ -49,23 +50,32 @@ serve(async (req) => {
     guardianUrl.searchParams.append('page-size', '10');
     guardianUrl.searchParams.append('order-by', 'newest');
 
-    console.log('Fetching from Guardian API:', guardianUrl.toString());
+    console.log('Fetching from Guardian API with URL:', guardianUrl.toString());
 
     const response = await fetch(guardianUrl.toString());
     const data = await response.json();
 
+    console.log('Guardian API response status:', response.status);
+    
     if (!response.ok) {
-      console.error('Guardian API error:', data);
-      throw new Error(`Guardian API error: ${data.message || 'Unknown error'}`);
+      console.error('Guardian API error response:', data);
+      throw new Error(`Guardian API error: ${data.response?.message || data.message || response.statusText || 'Unknown error'}`);
     }
 
-    console.log('Successfully fetched news data');
+    if (!data.response || !Array.isArray(data.response.results)) {
+      console.error('Invalid Guardian API response format:', data);
+      throw new Error('Invalid response format from Guardian API');
+    }
+
+    console.log('Successfully fetched news data with', data.response.results.length, 'articles');
 
     return new Response(JSON.stringify(data), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (error) {
     console.error('Error in fetch-news function:', error);
+    
+    // Return a more detailed error response
     return new Response(
       JSON.stringify({ 
         error: error.message,
