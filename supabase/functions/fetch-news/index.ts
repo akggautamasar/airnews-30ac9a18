@@ -36,6 +36,27 @@ serve(async (req) => {
       case 'Business':
         guardianSection = 'business';
         break;
+      case 'World':
+        guardianSection = 'world';
+        break;
+      case 'Science':
+        guardianSection = 'science';
+        break;
+      case 'Environment':
+        guardianSection = 'environment';
+        break;
+      case 'Education':
+        guardianSection = 'education';
+        break;
+      case 'Society':
+        guardianSection = 'society';
+        break;
+      case 'Media':
+        guardianSection = 'media';
+        break;
+      case 'Life & Style':
+        guardianSection = 'lifeandstyle';
+        break;
       default:
         guardianSection = 'news';
     }
@@ -52,14 +73,12 @@ serve(async (req) => {
       guardianUrl.searchParams.append('section', guardianSection);
     }
     guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
+    guardianUrl.searchParams.append('page-size', '50'); // Maximum allowed by Guardian API
     
-    // For Today's News, fetch more articles and use date filter
+    // For Today's News, use date filter
     if (isToday) {
       const today = new Date().toISOString().split('T')[0];
       guardianUrl.searchParams.append('from-date', today);
-      guardianUrl.searchParams.append('page-size', '50');  // Fetch more articles for today's news
-    } else {
-      guardianUrl.searchParams.append('page-size', '10');
     }
     
     guardianUrl.searchParams.append('order-by', 'newest');

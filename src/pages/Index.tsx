@@ -13,6 +13,13 @@ const categories = [
   "Business",
   "Entertainment",
   "Sports",
+  "World",
+  "Science",
+  "Environment",
+  "Education",
+  "Society",
+  "Media",
+  "Life & Style"
 ];
 
 export default function Index() {
