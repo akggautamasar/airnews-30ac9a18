@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { NewsCardProps } from "@/types/news";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
   const [isBookmarked, setIsBookmarked] = useState(false);
@@ -16,7 +17,6 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     try {
       setIsBookmarking(true);
       
-      // Create a serializable version of the article
       const articleData = {
         id: article.id,
         type: article.type || "",
@@ -79,7 +79,7 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     >
       <Card className="h-full overflow-hidden relative">
         {article.fields?.thumbnail && (
-          <div className="absolute inset-0 bg-black/20">
+          <div className="absolute inset-0 bg-black/20 h-1/2">
             <img
               src={article.fields.thumbnail}
               alt={article.webTitle}
@@ -87,49 +87,52 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
             />
           </div>
         )}
-        <CardContent className="relative h-full flex flex-col justify-end p-6 bg-gradient-to-t from-black/80 to-transparent text-white">
-          <div className="space-y-4">
-            <h2 className="text-2xl font-bold leading-tight">
-              {article.webTitle}
-            </h2>
-            <p className="text-sm opacity-90 line-clamp-3">
-              {article.fields?.bodyText}
-            </p>
-            <div className="flex items-center justify-between">
-              <span className="text-sm">
-                {format(new Date(article.webPublicationDate), 'PPP')}
-              </span>
-              <div className="flex gap-2">
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleBookmark}
-                  disabled={isBookmarking || isBookmarked}
-                  className="text-white hover:text-white/80"
-                >
-                  <Bookmark
-                    className={`h-5 w-5 ${isBookmarked ? "fill-white" : ""}`}
-                  />
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={handleShare}
-                  className="text-white hover:text-white/80"
-                >
-                  <Share2 className="h-5 w-5" />
-                </Button>
+        <CardContent className="relative h-full flex flex-col p-6">
+          <div className="h-1/2" /> {/* Spacer for image */}
+          <ScrollArea className="flex-1 -mt-12">
+            <div className="space-y-6 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 rounded-t-3xl">
+              <h2 className="text-3xl font-bold leading-tight text-white">
+                {article.webTitle}
+              </h2>
+              <p className="text-lg text-white/90 leading-relaxed">
+                {article.fields?.bodyText}
+              </p>
+              <div className="flex items-center justify-between pt-4">
+                <span className="text-sm text-white/80">
+                  {format(new Date(article.webPublicationDate), 'PPP')}
+                </span>
+                <div className="flex gap-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleBookmark}
+                    disabled={isBookmarking || isBookmarked}
+                    className="text-white hover:text-white/80"
+                  >
+                    <Bookmark
+                      className={`h-5 w-5 ${isBookmarked ? "fill-white" : ""}`}
+                    />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={handleShare}
+                    className="text-white hover:text-white/80"
+                  >
+                    <Share2 className="h-5 w-5" />
+                  </Button>
+                </div>
               </div>
+              <a
+                href={article.webUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-2 text-sm text-white/90 hover:text-white underline"
+              >
+                Read full article
+              </a>
             </div>
-            <a
-              href={article.webUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block mt-2 text-sm text-white/90 hover:text-white underline"
-            >
-              Read full article
-            </a>
-          </div>
+          </ScrollArea>
         </CardContent>
       </Card>
     </motion.div>

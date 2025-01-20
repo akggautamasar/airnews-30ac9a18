@@ -5,6 +5,7 @@ import { CategoryNav } from "@/components/CategoryNav";
 import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 const categories = [
   "Top Stories",
@@ -56,33 +57,26 @@ export default function Index() {
           </div>
         </aside>
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
-          {isLoading ? (
-            <div className="text-center">Loading news...</div>
-          ) : error ? (
-            <div className="text-center text-red-500">
-              Failed to load news. Please try again later.
-            </div>
-          ) : (
-            <Carousel
-              opts={{
-                axis: 'y',
-                dragFree: true,
-              }}
-              className="h-full"
-              orientation="vertical"
-            >
-              <CarouselContent className="-mt-4">
+          <ScrollArea className="h-full">
+            {isLoading ? (
+              <div className="text-center">Loading news...</div>
+            ) : error ? (
+              <div className="text-center text-red-500">
+                Failed to load news. Please try again later.
+              </div>
+            ) : (
+              <div className="space-y-6 pb-6">
                 {newsData?.response?.results?.map((article) => (
-                  <CarouselItem key={article.id} className="pt-4">
+                  <div key={article.id} className="h-[80vh] min-h-[600px]">
                     <NewsCard
                       article={article}
                       category={selectedCategory}
                     />
-                  </CarouselItem>
+                  </div>
                 ))}
-              </CarouselContent>
-            </Carousel>
-          )}
+              </div>
+            )}
+          </ScrollArea>
         </main>
       </div>
     </div>
