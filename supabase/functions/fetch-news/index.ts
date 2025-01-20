@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
@@ -15,6 +16,10 @@ serve(async (req) => {
   }
 
   try {
+    if (req.method !== 'POST') {
+      throw new Error(`HTTP method ${req.method} is not allowed`);
+    }
+
     const { category, isToday } = await req.json();
     
     console.log('Received request for category:', category, 'isToday:', isToday);
@@ -90,15 +95,14 @@ serve(async (req) => {
     console.log('Fetching from Guardian API with URL:', guardianUrl.toString());
 
     const response = await fetch(guardianUrl.toString());
-    const data = await response.json();
-
-    console.log('Guardian API response status:', response.status);
-    
     if (!response.ok) {
-      console.error('Guardian API error response:', data);
-      throw new Error(`Guardian API error: ${data.response?.message || data.message || response.statusText || 'Unknown error'}`);
+      const errorData = await response.text();
+      console.error('Guardian API error response:', errorData);
+      throw new Error(`Guardian API error: ${response.statusText}`);
     }
 
+    const data = await response.json();
+    
     if (!data.response || !Array.isArray(data.response.results)) {
       console.error('Invalid Guardian API response format:', data);
       throw new Error('Invalid response format from Guardian API');
