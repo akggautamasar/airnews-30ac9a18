@@ -9,6 +9,47 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      advertisements: {
+        Row: {
+          active: boolean | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          image_url: string | null
+          link_url: string | null
+          title: string
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          title: string
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          link_url?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "advertisements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookmarks: {
         Row: {
           article_data: Json
@@ -49,6 +90,7 @@ export type Database = {
           display_name: string | null
           id: string
           interests: string[] | null
+          is_admin: boolean | null
           location: string | null
           mobile_number: string | null
           news_preferences: Json | null
@@ -62,6 +104,7 @@ export type Database = {
           display_name?: string | null
           id: string
           interests?: string[] | null
+          is_admin?: boolean | null
           location?: string | null
           mobile_number?: string | null
           news_preferences?: Json | null
@@ -75,6 +118,7 @@ export type Database = {
           display_name?: string | null
           id?: string
           interests?: string[] | null
+          is_admin?: boolean | null
           location?: string | null
           mobile_number?: string | null
           news_preferences?: Json | null
