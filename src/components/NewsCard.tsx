@@ -88,10 +88,10 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
           </div>
         )}
         <CardContent className="relative h-full flex flex-col p-6">
-          <div className="h-1/2" /> {/* Spacer for image */}
+          <div className="h-1/2" />
           <ScrollArea className="flex-1 -mt-12">
-            <div className="space-y-6 bg-gradient-to-t from-black/90 via-black/70 to-transparent p-6 rounded-t-3xl">
-              <h2 className="text-3xl font-bold leading-tight text-white">
+            <div className="space-y-6 bg-gradient-to-t from-black/95 via-black/85 to-black/70 p-6 rounded-t-3xl">
+              <h2 className="text-3xl font-bold leading-tight text-[#9b87f5]">
                 {article.webTitle}
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
