@@ -5,6 +5,7 @@ import { CategoryNav } from "@/components/CategoryNav";
 import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const categories = [
   "Today's News",
@@ -22,17 +23,24 @@ const categories = [
   "Life & Style"
 ];
 
+const newsAgencies = [
+  { id: 'guardian', name: 'The Guardian' },
+  { id: 'newsapi', name: 'News API' }
+];
+
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState("Today's News");
+  const [selectedNewsAgency, setSelectedNewsAgency] = useState('guardian');
 
   const { data: newsData, isLoading, error } = useQuery({
-    queryKey: ['news', selectedCategory],
+    queryKey: ['news', selectedCategory, selectedNewsAgency],
     queryFn: async () => {
       try {
         const response = await supabase.functions.invoke('fetch-news', {
           body: { 
             category: selectedCategory,
-            isToday: selectedCategory === "Today's News"
+            isToday: selectedCategory === "Today's News",
+            newsAgency: selectedNewsAgency
           },
         });
 
@@ -52,6 +60,21 @@ export default function Index() {
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col md:flex-row gap-8">
         <aside className="md:w-1/4">
+          <div className="mb-6">
+            <label className="block text-sm font-medium mb-2">Select News Source</label>
+            <Select value={selectedNewsAgency} onValueChange={setSelectedNewsAgency}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a news source" />
+              </SelectTrigger>
+              <SelectContent>
+                {newsAgencies.map((agency) => (
+                  <SelectItem key={agency.id} value={agency.id}>
+                    {agency.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
           <CategoryNav
             categories={categories}
             selectedCategory={selectedCategory}

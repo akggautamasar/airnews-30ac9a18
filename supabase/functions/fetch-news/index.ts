@@ -2,147 +2,116 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
+async function fetchGuardianNews(category: string, isToday: boolean) {
+  const apiKey = Deno.env.get('GUARDIAN_API_KEY');
+  if (!apiKey) {
+    throw new Error('Guardian API key not configured');
+  }
+
+  const guardianUrl = new URL('https://content.guardianapis.com/search');
+  guardianUrl.searchParams.append('api-key', apiKey);
+  if (category && category !== "Today's News") {
+    guardianUrl.searchParams.append('section', category.toLowerCase());
+  }
+  guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
+  guardianUrl.searchParams.append('page-size', '50');
+  
+  if (isToday) {
+    const today = new Date().toISOString().split('T')[0];
+    guardianUrl.searchParams.append('from-date', today);
+  }
+  
+  guardianUrl.searchParams.append('order-by', 'newest');
+
+  const response = await fetch(guardianUrl.toString());
+  if (!response.ok) {
+    throw new Error(`Guardian API error: ${response.statusText}`);
+  }
+  return await response.json();
+}
+
+async function fetchNewsAPI(category: string) {
+  const apiKey = Deno.env.get('NEWS_API_KEY');
+  if (!apiKey) {
+    throw new Error('News API key not configured');
+  }
+
+  const newsApiUrl = new URL('https://newsapi.org/v2/top-headlines');
+  newsApiUrl.searchParams.append('apiKey', apiKey);
+  
+  if (category && category !== "Today's News") {
+    newsApiUrl.searchParams.append('category', category.toLowerCase());
+  }
+  newsApiUrl.searchParams.append('pageSize', '50');
+  newsApiUrl.searchParams.append('language', 'en');
+
+  const response = await fetch(newsApiUrl.toString());
+  if (!response.ok) {
+    throw new Error(`News API error: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return {
+    response: {
+      status: 'ok',
+      results: data.articles.map((article: any) => ({
+        id: article.url,
+        webTitle: article.title,
+        webPublicationDate: article.publishedAt,
+        webUrl: article.url,
+        fields: {
+          thumbnail: article.urlToImage,
+          bodyText: article.description || article.content
+        },
+        source: article.source.name
+      }))
+    }
+  };
+}
+
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      headers: corsHeaders,
-      status: 200
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    if (req.method !== 'POST') {
-      throw new Error(`HTTP method ${req.method} is not allowed`);
-    }
-
-    const { category, isToday } = await req.json();
+    const { category, isToday, newsAgency = 'guardian' } = await req.json();
     
-    console.log('Received request for category:', category, 'isToday:', isToday);
+    console.log('Fetching news for:', { category, isToday, newsAgency });
     
-    // Map our categories to Guardian sections/tags
-    let guardianSection = category.toLowerCase();
-    switch(category) {
-      case "Today's News":
-        guardianSection = '';  // Empty to fetch all sections
-        break;
-      case 'Top Stories':
-        guardianSection = 'news';
-        break;
-      case 'Entertainment':
-        guardianSection = 'culture';
-        break;
-      case 'Technology':
-        guardianSection = 'technology';
-        break;
-      case 'Sports':
-        guardianSection = 'sport';
-        break;
-      case 'Business':
-        guardianSection = 'business';
-        break;
-      case 'World':
-        guardianSection = 'world';
-        break;
-      case 'Science':
-        guardianSection = 'science';
-        break;
-      case 'Environment':
-        guardianSection = 'environment';
-        break;
-      case 'Education':
-        guardianSection = 'education';
-        break;
-      case 'Society':
-        guardianSection = 'society';
-        break;
-      case 'Media':
-        guardianSection = 'media';
-        break;
-      case 'Life & Style':
-        guardianSection = 'lifeandstyle';
-        break;
-      default:
-        guardianSection = 'news';
-    }
+    let newsData;
     
-    const apiKey = Deno.env.get('GUARDIAN_API_KEY');
-    if (!apiKey) {
-      console.error('Guardian API key not configured');
-      throw new Error('Guardian API key not configured');
-    }
-
-    const guardianUrl = new URL('https://content.guardianapis.com/search');
-    guardianUrl.searchParams.append('api-key', apiKey);
-    if (guardianSection) {
-      guardianUrl.searchParams.append('section', guardianSection);
-    }
-    guardianUrl.searchParams.append('show-fields', 'thumbnail,bodyText,trailText');
-    guardianUrl.searchParams.append('page-size', '50');
-    
-    if (isToday) {
-      const today = new Date().toISOString().split('T')[0];
-      guardianUrl.searchParams.append('from-date', today);
-    }
-    
-    guardianUrl.searchParams.append('order-by', 'newest');
-
-    console.log('Fetching from Guardian API with URL:', guardianUrl.toString());
-
     try {
-      const response = await fetch(guardianUrl.toString(), {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Guardian API error response:', errorText);
-        throw new Error(`Guardian API error: ${response.statusText}`);
+      if (newsAgency === 'guardian') {
+        newsData = await fetchGuardianNews(category, isToday);
+      } else if (newsAgency === 'newsapi') {
+        newsData = await fetchNewsAPI(category);
+      } else {
+        throw new Error(`Unsupported news agency: ${newsAgency}`);
       }
-
-      const data = await response.json();
       
-      if (!data.response || !Array.isArray(data.response.results)) {
-        console.error('Invalid Guardian API response format:', data);
-        throw new Error('Invalid response format from Guardian API');
-      }
-
-      console.log('Successfully fetched news data with', data.response.results.length, 'articles');
-
-      return new Response(JSON.stringify(data), {
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        },
+      return new Response(JSON.stringify(newsData), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 200
       });
-    } catch (fetchError) {
-      console.error('Error fetching from Guardian API:', fetchError);
-      throw new Error(`Failed to fetch from Guardian API: ${fetchError.message}`);
+    } catch (error) {
+      console.error(`Error fetching from ${newsAgency}:`, error);
+      throw error;
     }
   } catch (error) {
     console.error('Error in fetch-news function:', error);
     
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message,
-        response: { 
-          status: 'error',
-          results: [] 
-        }
+        response: { status: 'error', results: [] }
       }),
-      { 
-        headers: { 
-          ...corsHeaders, 
-          'Content-Type': 'application/json'
-        },
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 500
       }
     );
