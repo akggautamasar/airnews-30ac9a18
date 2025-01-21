@@ -100,6 +100,58 @@ async function fetchNewsAPI(category: string, isToday: boolean) {
   };
 }
 
+async function fetchCustomNews(category: string, isToday: boolean) {
+  const apiKey = Deno.env.get('D7F4AEC67AA64EF39093BF7FEA67BAC2');
+  if (!apiKey) {
+    throw new Error('Custom News API key not configured');
+  }
+
+  const customUrl = new URL('https://api.thenewsapi.com/v1/news/top');
+  customUrl.searchParams.append('api_token', apiKey);
+  customUrl.searchParams.append('locale', 'us');
+  customUrl.searchParams.append('limit', '50');
+  
+  if (category && category !== "Today's News") {
+    customUrl.searchParams.append('categories', category.toLowerCase());
+  }
+
+  if (isToday) {
+    const today = new Date().toISOString().split('T')[0];
+    customUrl.searchParams.append('published_on', today);
+  }
+
+  console.log('Fetching from Custom News API:', customUrl.toString());
+  const response = await fetch(customUrl.toString());
+  if (!response.ok) {
+    throw new Error(`Custom News API error: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  
+  // Transform Custom News API response to match Guardian API format
+  return {
+    response: {
+      status: 'ok',
+      results: data.data.map((article: any) => ({
+        id: article.uuid,
+        type: 'article',
+        sectionId: article.categories?.[0] || 'general',
+        sectionName: article.categories?.[0] || 'General',
+        webPublicationDate: article.published_at,
+        webTitle: article.title,
+        webUrl: article.url,
+        apiUrl: article.url,
+        fields: {
+          thumbnail: article.image_url,
+          bodyText: article.description,
+          trailText: article.snippet
+        },
+        source: article.source
+      }))
+    }
+  };
+}
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -117,6 +169,8 @@ serve(async (req) => {
         newsData = await fetchGuardianNews(category, isToday);
       } else if (newsAgency === 'newsapi') {
         newsData = await fetchNewsAPI(category, isToday);
+      } else if (newsAgency === 'custom') {
+        newsData = await fetchCustomNews(category, isToday);
       } else {
         throw new Error(`Unsupported news agency: ${newsAgency}`);
       }

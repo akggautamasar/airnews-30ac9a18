@@ -21,7 +21,8 @@ const categories = [
 
 const newsAgencies = [
   { id: 'guardian', name: 'The Guardian' },
-  { id: 'newsapi', name: 'News API' }
+  { id: 'newsapi', name: 'News API' },
+  { id: 'custom', name: 'The News API' }
 ];
 
 export default function Index() {
