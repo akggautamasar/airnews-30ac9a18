@@ -27,6 +27,7 @@ async function fetchGuardianNews(category: string, isToday: boolean) {
   
   guardianUrl.searchParams.append('order-by', 'newest');
 
+  console.log('Fetching from Guardian API:', guardianUrl.toString());
   const response = await fetch(guardianUrl.toString());
   if (!response.ok) {
     throw new Error(`Guardian API error: ${response.statusText}`);
@@ -34,7 +35,7 @@ async function fetchGuardianNews(category: string, isToday: boolean) {
   return await response.json();
 }
 
-async function fetchNewsAPI(category: string) {
+async function fetchNewsAPI(category: string, isToday: boolean) {
   const apiKey = Deno.env.get('NEWS_API_KEY');
   if (!apiKey) {
     throw new Error('News API key not configured');
@@ -43,29 +44,55 @@ async function fetchNewsAPI(category: string) {
   const newsApiUrl = new URL('https://newsapi.org/v2/top-headlines');
   newsApiUrl.searchParams.append('apiKey', apiKey);
   
-  if (category && category !== "Today's News") {
-    newsApiUrl.searchParams.append('category', category.toLowerCase());
+  // Map categories to News API categories
+  const categoryMap: { [key: string]: string } = {
+    "Today's News": '',
+    "Technology": 'technology',
+    "Business": 'business',
+    "Entertainment": 'entertainment',
+    "Sports": 'sports',
+    "Science": 'science',
+    "Health": 'health',
+    "World": 'general'
+  };
+
+  if (category && categoryMap[category]) {
+    newsApiUrl.searchParams.append('category', categoryMap[category]);
   }
+
+  if (isToday) {
+    const today = new Date().toISOString().split('T')[0];
+    newsApiUrl.searchParams.append('from', today);
+  }
+
   newsApiUrl.searchParams.append('pageSize', '50');
   newsApiUrl.searchParams.append('language', 'en');
 
+  console.log('Fetching from News API:', newsApiUrl.toString());
   const response = await fetch(newsApiUrl.toString());
   if (!response.ok) {
     throw new Error(`News API error: ${response.statusText}`);
   }
   
   const data = await response.json();
+  
+  // Transform News API response to match Guardian API format
   return {
     response: {
       status: 'ok',
       results: data.articles.map((article: any) => ({
         id: article.url,
-        webTitle: article.title,
+        type: 'article',
+        sectionId: article.source.name,
+        sectionName: article.source.name,
         webPublicationDate: article.publishedAt,
+        webTitle: article.title,
         webUrl: article.url,
+        apiUrl: article.url,
         fields: {
           thumbnail: article.urlToImage,
-          bodyText: article.description || article.content
+          bodyText: article.description || article.content,
+          trailText: article.description
         },
         source: article.source.name
       }))
@@ -89,7 +116,7 @@ serve(async (req) => {
       if (newsAgency === 'guardian') {
         newsData = await fetchGuardianNews(category, isToday);
       } else if (newsAgency === 'newsapi') {
-        newsData = await fetchNewsAPI(category);
+        newsData = await fetchNewsAPI(category, isToday);
       } else {
         throw new Error(`Unsupported news agency: ${newsAgency}`);
       }

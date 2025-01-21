@@ -16,11 +16,7 @@ const categories = [
   "Sports",
   "World",
   "Science",
-  "Environment",
-  "Education",
-  "Society",
-  "Media",
-  "Life & Style"
+  "Health"
 ];
 
 const newsAgencies = [
