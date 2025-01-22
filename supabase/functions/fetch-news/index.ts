@@ -1,8 +1,12 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { corsHeaders } from "../_shared/cors.ts";
 
 const GUARDIAN_API_KEY = Deno.env.get('GUARDIAN_API_KEY');
 const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY');
+
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -21,11 +25,11 @@ serve(async (req) => {
       const today = new Date().toISOString().split('T')[0];
       
       // Map category to Guardian's section names
-      let section = category.toLowerCase();
-      if (category === "Today's News") {
-        section = ""; // Don't filter by section for today's news
+      let section = category.toLowerCase().replace("'s news", '').trim();
+      if (category === "Today's News" || category === "Top Stories") {
+        section = ""; // Don't filter by section for these categories
       }
-      
+
       const params = new URLSearchParams({
         'api-key': GUARDIAN_API_KEY || '',
         'show-fields': 'thumbnail,bodyText',
@@ -34,7 +38,7 @@ serve(async (req) => {
       });
 
       // Only add section parameter if we have a specific section
-      if (section && section !== "top stories") {
+      if (section) {
         params.append('section', section);
       }
 
@@ -44,14 +48,13 @@ serve(async (req) => {
         params.append('to-date', today);
       }
 
-      const url = `${baseUrl}?${params}`;
-      console.log('Fetching from Guardian API:', url);
+      console.log('Fetching from Guardian API with URL:', `${baseUrl}?${params}`);
       
-      const response = await fetch(url);
+      const response = await fetch(`${baseUrl}?${params}`);
       const data = await response.json();
       
       if (!response.ok) {
-        console.error('Guardian API error:', data);
+        console.error('Guardian API error response:', data);
         throw new Error(`Guardian API error: ${data.message || response.statusText}`);
       }
       
@@ -101,7 +104,10 @@ serve(async (req) => {
     console.error('Error in fetch-news function:', error);
     
     return new Response(
-      JSON.stringify({ error: error.message || 'Internal server error' }),
+      JSON.stringify({ 
+        error: error.message || 'Internal server error',
+        details: error.stack
+      }),
       {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
