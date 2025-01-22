@@ -53,8 +53,51 @@ export default function Index() {
     },
   });
 
+  const { data: advertisements } = useQuery({
+    queryKey: ['active-advertisements'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('advertisements')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false })
+        .limit(1);
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="container mx-auto px-4 py-8">
+      {advertisements && advertisements.length > 0 && (
+        <div className="mb-8">
+          <a
+            href={advertisements[0].link_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block"
+          >
+            <div className="relative rounded-lg overflow-hidden bg-secondary p-4">
+              <div className="flex items-center space-x-4">
+                {advertisements[0].image_url && (
+                  <img
+                    src={advertisements[0].image_url}
+                    alt={advertisements[0].title}
+                    className="w-24 h-24 object-cover rounded"
+                  />
+                )}
+                <div>
+                  <h3 className="font-bold text-lg">{advertisements[0].title}</h3>
+                  <p className="text-sm text-secondary-foreground">
+                    {advertisements[0].description}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </a>
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-8">
         <aside className="md:w-1/4">
           <div className="mb-6">
