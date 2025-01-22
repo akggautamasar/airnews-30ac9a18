@@ -7,7 +7,7 @@ import { CalendarCard } from "@/components/CalendarCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
-import { format } from "date-fns";
+import { toast } from "sonner";
 
 const categories = [
   "Today's News",
@@ -35,6 +35,8 @@ export default function Index() {
     queryKey: ['news', selectedCategory, selectedNewsAgency],
     queryFn: async () => {
       try {
+        console.log('Fetching news with params:', { selectedCategory, selectedNewsAgency });
+        
         const response = await supabase.functions.invoke('fetch-news', {
           body: { 
             category: selectedCategory,
@@ -43,44 +45,60 @@ export default function Index() {
           },
         });
 
+        console.log('News API response:', response);
+
         if (response.error) {
+          console.error('Error in news response:', response.error);
           throw new Error(response.error.message || 'Failed to fetch news');
         }
 
         return response.data;
       } catch (error) {
         console.error('Error fetching news:', error);
-        throw new Error('Failed to fetch news. Please try again later.');
+        toast.error('Failed to fetch news. Please try again later.');
+        throw error;
       }
     },
+    retry: 1,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
   const { data: advertisements } = useQuery({
     queryKey: ['active-advertisements'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('advertisements')
-        .select('*')
-        .eq('active', true)
-        .order('created_at', { ascending: false })
-        .limit(1);
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('advertisements')
+          .select('*')
+          .eq('active', true)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching advertisements:', error);
+        return [];
+      }
     },
   });
 
   const { data: upcomingEvents } = useQuery({
     queryKey: ['upcoming-events'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('special_events')
-        .select('*')
-        .gte('event_date', new Date().toISOString().split('T')[0])
-        .order('event_date', { ascending: true });
-      
-      if (error) throw error;
-      return data;
+      try {
+        const { data, error } = await supabase
+          .from('special_events')
+          .select('*')
+          .gte('event_date', new Date().toISOString().split('T')[0])
+          .order('event_date', { ascending: true });
+        
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching events:', error);
+        return [];
+      }
     },
   });
 
@@ -157,10 +175,16 @@ export default function Index() {
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
           <ScrollArea className="h-full">
             {isLoading ? (
-              <div className="text-center">Loading news...</div>
+              <div className="text-center p-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+                <p>Loading news...</p>
+              </div>
             ) : error ? (
-              <div className="text-center text-red-500">
-                Failed to load news. Please try again later.
+              <div className="text-center p-8 text-red-500">
+                <p>Failed to load news. Please try again later.</p>
+                <pre className="mt-2 text-xs text-left bg-red-50 p-4 rounded">
+                  {error.message}
+                </pre>
               </div>
             ) : (
               <div className="space-y-6 pb-6">
