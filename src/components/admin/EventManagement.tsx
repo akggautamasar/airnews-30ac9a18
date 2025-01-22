@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "sonner";
 import { format } from "date-fns";
 
@@ -76,6 +77,10 @@ export const EventManagement = () => {
     },
   });
 
+  const upcomingEvents = events?.filter(event => 
+    new Date(event.event_date) >= new Date()
+  ) || [];
+
   return (
     <div className="space-y-8">
       <Card>
@@ -111,13 +116,18 @@ export const EventManagement = () => {
             </div>
             
             <div>
-              <Label htmlFor="imageUrl">Image URL</Label>
-              <Input
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                required
+              <Label>Image</Label>
+              <ImageUpload
+                onUploadComplete={setImageUrl}
+                folder="events"
               />
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="mt-2 w-full h-40 object-cover rounded-md"
+                />
+              )}
             </div>
             
             <div>
@@ -142,7 +152,7 @@ export const EventManagement = () => {
         {isLoading ? (
           <p>Loading events...</p>
         ) : (
-          events?.map((event) => (
+          upcomingEvents.map((event) => (
             <Card key={event.id}>
               <CardHeader>
                 <CardTitle>{event.title}</CardTitle>

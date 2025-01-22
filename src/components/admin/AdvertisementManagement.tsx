@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ImageUpload } from "@/components/ImageUpload";
 import { toast } from "sonner";
 
 export const AdvertisementManagement = () => {
@@ -135,13 +136,18 @@ export const AdvertisementManagement = () => {
             </div>
             
             <div>
-              <Label htmlFor="imageUrl">Image URL</Label>
-              <Input
-                id="imageUrl"
-                value={imageUrl}
-                onChange={(e) => setImageUrl(e.target.value)}
-                required
+              <Label>Image</Label>
+              <ImageUpload
+                onUploadComplete={setImageUrl}
+                folder="advertisements"
               />
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  className="mt-2 w-full h-40 object-cover rounded-md"
+                />
+              )}
             </div>
             
             <div>
@@ -166,48 +172,39 @@ export const AdvertisementManagement = () => {
           <p>Loading advertisements...</p>
         ) : (
           advertisements?.map((ad) => (
-            <Card key={ad.id}>
-              <CardHeader>
-                <CardTitle>{ad.title}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <p className="text-sm">{ad.description}</p>
-                  {ad.image_url && (
-                    <img
-                      src={ad.image_url}
-                      alt={ad.title}
-                      className="w-full h-40 object-cover rounded-md"
+            <Card key={ad.id} className="relative overflow-hidden">
+              {ad.image_url && (
+                <div className="absolute inset-0">
+                  <img
+                    src={ad.image_url}
+                    alt={ad.title}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+                </div>
+              )}
+              <CardContent className="relative z-10 mt-32 space-y-4">
+                <h3 className="text-2xl font-bold text-white">{ad.title}</h3>
+                <p className="text-white/90">{ad.description}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <Switch
+                      checked={ad.active}
+                      onCheckedChange={(checked) =>
+                        toggleAdvertisement.mutate({ id: ad.id, active: checked })
+                      }
                     />
-                  )}
-                  <a
-                    href={ad.link_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-primary hover:underline"
-                  >
-                    View Advertisement
-                  </a>
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        checked={ad.active}
-                        onCheckedChange={(checked) =>
-                          toggleAdvertisement.mutate({ id: ad.id, active: checked })
-                        }
-                      />
-                      <span className="text-sm">
-                        {ad.active ? "Active" : "Inactive"}
-                      </span>
-                    </div>
-                    <Button
-                      variant="destructive"
-                      onClick={() => deleteAdvertisement.mutate(ad.id)}
-                      disabled={deleteAdvertisement.isPending}
-                    >
-                      Delete
-                    </Button>
+                    <span className="text-white">
+                      {ad.active ? "Active" : "Inactive"}
+                    </span>
                   </div>
+                  <Button
+                    variant="destructive"
+                    onClick={() => deleteAdvertisement.mutate(ad.id)}
+                    disabled={deleteAdvertisement.isPending}
+                  >
+                    Delete
+                  </Button>
                 </div>
               </CardContent>
             </Card>

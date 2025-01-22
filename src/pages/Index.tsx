@@ -6,6 +6,8 @@ import { NewsCard } from "@/components/NewsCard";
 import { CalendarCard } from "@/components/CalendarCard";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
+import { format } from "date-fns";
 
 const categories = [
   "Today's News",
@@ -68,6 +70,20 @@ export default function Index() {
     },
   });
 
+  const { data: upcomingEvents } = useQuery({
+    queryKey: ['upcoming-events'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('special_events')
+        .select('*')
+        .gte('event_date', new Date().toISOString().split('T')[0])
+        .order('event_date', { ascending: true });
+      
+      if (error) throw error;
+      return data;
+    },
+  });
+
   return (
     <div className="container mx-auto px-4 py-8">
       {advertisements && advertisements.length > 0 && (
@@ -78,23 +94,28 @@ export default function Index() {
             rel="noopener noreferrer"
             className="block"
           >
-            <div className="relative rounded-lg overflow-hidden bg-secondary p-4">
-              <div className="flex items-center space-x-4">
+            <Card className="overflow-hidden">
+              <div className="relative h-96">
                 {advertisements[0].image_url && (
-                  <img
-                    src={advertisements[0].image_url}
-                    alt={advertisements[0].title}
-                    className="w-24 h-24 object-cover rounded"
-                  />
+                  <>
+                    <img
+                      src={advertisements[0].image_url}
+                      alt={advertisements[0].title}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
+                  </>
                 )}
-                <div>
-                  <h3 className="font-bold text-lg">{advertisements[0].title}</h3>
-                  <p className="text-sm text-secondary-foreground">
+                <div className="absolute bottom-0 left-0 right-0 p-8">
+                  <h2 className="text-4xl font-bold text-white mb-4">
+                    {advertisements[0].title}
+                  </h2>
+                  <p className="text-xl text-white/90">
                     {advertisements[0].description}
                   </p>
                 </div>
               </div>
-            </div>
+            </Card>
           </a>
         </div>
       )}
@@ -120,13 +141,17 @@ export default function Index() {
             selectedCategory={selectedCategory}
             onSelectCategory={setSelectedCategory}
           />
-          <div className="mt-8">
-            <CalendarCard 
-              title="Upcoming Events"
-              date={new Date()}
-              description="No upcoming events"
-              type="event"
-            />
+          <div className="mt-8 space-y-4">
+            <h3 className="font-bold text-lg mb-4">Upcoming Events</h3>
+            {upcomingEvents?.map((event) => (
+              <CalendarCard
+                key={event.id}
+                title={event.title}
+                date={new Date(event.event_date)}
+                description={event.description}
+                type="event"
+              />
+            ))}
           </div>
         </aside>
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
