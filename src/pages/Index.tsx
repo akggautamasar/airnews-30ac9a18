@@ -64,7 +64,7 @@ export default function Index() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: advertisements, isLoading: isAdsLoading } = useQuery({
+  const { data: advertisements, isLoading: isAdsLoading, error: adsError } = useQuery({
     queryKey: ['active-advertisements'],
     queryFn: async () => {
       try {
@@ -78,18 +78,19 @@ export default function Index() {
         
         if (error) {
           console.error('Error fetching advertisements:', error);
-          return null;
+          throw error;
         }
         return data;
       } catch (error) {
         console.error('Error fetching advertisements:', error);
-        return null;
+        throw error;
       }
     },
     retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: upcomingEvents, isLoading: isEventsLoading } = useQuery({
+  const { data: upcomingEvents, isLoading: isEventsLoading, error: eventsError } = useQuery({
     queryKey: ['upcoming-events'],
     queryFn: async () => {
       try {
@@ -101,23 +102,30 @@ export default function Index() {
         
         if (error) {
           console.error('Error fetching events:', error);
-          return [];
+          throw error;
         }
-        return data;
+        return data || [];
       } catch (error) {
         console.error('Error fetching events:', error);
-        return [];
+        throw error;
       }
     },
     retry: 2,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  // Show error toast when there's an error
+  // Show error toasts when there are errors
   useEffect(() => {
     if (newsError) {
       toast.error('Failed to load news. Please try again later.');
     }
-  }, [newsError]);
+    if (adsError) {
+      toast.error('Failed to load advertisements. Please try again later.');
+    }
+    if (eventsError) {
+      toast.error('Failed to load events. Please try again later.');
+    }
+  }, [newsError, adsError, eventsError]);
 
   const isLoading = isNewsLoading || isAdsLoading || isEventsLoading;
 

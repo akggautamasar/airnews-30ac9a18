@@ -25,7 +25,7 @@ serve(async (req) => {
       const today = new Date().toISOString().split('T')[0];
       
       // Map category to Guardian's section names
-      let section = category.toLowerCase().replace("'s news", '').trim();
+      let section = category?.toLowerCase()?.replace("'s news", '')?.trim() || '';
       if (category === "Today's News" || category === "Top Stories") {
         section = ""; // Don't filter by section for these categories
       }
@@ -38,7 +38,7 @@ serve(async (req) => {
       });
 
       // Only add section parameter if we have a specific section
-      if (section) {
+      if (section && section !== 'top stories') {
         params.append('section', section);
       }
 
@@ -48,9 +48,10 @@ serve(async (req) => {
         params.append('to-date', today);
       }
 
-      console.log('Fetching from Guardian API with URL:', `${baseUrl}?${params}`);
+      const url = `${baseUrl}?${params}`;
+      console.log('Fetching from Guardian API with URL:', url);
       
-      const response = await fetch(`${baseUrl}?${params}`);
+      const response = await fetch(url);
       const data = await response.json();
       
       if (!response.ok) {
