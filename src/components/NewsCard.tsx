@@ -8,13 +8,27 @@ import { NewsCardProps } from "@/types/news";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useNavigate } from "react-router-dom";
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
+  const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
 
   const handleBookmark = async () => {
     try {
+      const { data: session } = await supabase.auth.getSession();
+      
+      if (!session?.session?.user) {
+        toast.error("Please sign in to bookmark articles", {
+          action: {
+            label: "Sign In",
+            onClick: () => navigate("/auth")
+          }
+        });
+        return;
+      }
+
       setIsBookmarking(true);
       
       const articleData = {
@@ -37,7 +51,8 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
 
       const { error } = await supabase.from("saved_articles").insert({
         article_data: articleData,
-        is_bookmarked: true
+        is_bookmarked: true,
+        user_id: session.session.user.id
       });
 
       if (error) throw error;

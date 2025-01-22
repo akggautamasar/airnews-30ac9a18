@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { User } from "@supabase/supabase-js";
+import { toast } from "sonner";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -10,11 +12,14 @@ interface LayoutProps {
 export const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const checkAdmin = async () => {
+    const checkUser = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
+      setUser(session?.user || null);
+      
+      if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
           .select('is_admin')
@@ -25,8 +30,25 @@ export const Layout = ({ children }: LayoutProps) => {
       }
     };
 
-    checkAdmin();
+    checkUser();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user || null);
+      checkUser();
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate("/");
+      toast.success("Successfully signed out!");
+    } catch (error: any) {
+      toast.error(error.message);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -38,6 +60,20 @@ export const Layout = ({ children }: LayoutProps) => {
           {isAdmin && (
             <Link to="/admin">
               <Button variant="secondary">Admin Dashboard</Button>
+            </Link>
+          )}
+        </div>
+        <div className="flex items-center space-x-4">
+          {user ? (
+            <>
+              <span className="text-sm">{user.email}</span>
+              <Button variant="secondary" onClick={handleSignOut}>
+                Sign Out
+              </Button>
+            </>
+          ) : (
+            <Link to="/auth">
+              <Button variant="secondary">Sign In</Button>
             </Link>
           )}
         </div>
