@@ -8,6 +8,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react";
 
 const categories = [
   "Today's News",
@@ -31,7 +32,7 @@ export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState("Today's News");
   const [selectedNewsAgency, setSelectedNewsAgency] = useState('guardian');
 
-  const { data: newsData, isLoading, error } = useQuery({
+  const { data: newsData, isLoading: isNewsLoading, error: newsError } = useQuery({
     queryKey: ['news', selectedCategory, selectedNewsAgency],
     queryFn: async () => {
       try {
@@ -55,7 +56,6 @@ export default function Index() {
         return response.data;
       } catch (error) {
         console.error('Error fetching news:', error);
-        toast.error('Failed to fetch news. Please try again later.');
         throw error;
       }
     },
@@ -63,7 +63,7 @@ export default function Index() {
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  const { data: advertisements } = useQuery({
+  const { data: advertisements, isLoading: isAdsLoading, error: adsError } = useQuery({
     queryKey: ['active-advertisements'],
     queryFn: async () => {
       try {
@@ -72,18 +72,19 @@ export default function Index() {
           .select('*')
           .eq('active', true)
           .order('created_at', { ascending: false })
-          .limit(1);
+          .limit(1)
+          .maybeSingle();
         
         if (error) throw error;
         return data;
       } catch (error) {
         console.error('Error fetching advertisements:', error);
-        return [];
+        return null;
       }
     },
   });
 
-  const { data: upcomingEvents } = useQuery({
+  const { data: upcomingEvents, isLoading: isEventsLoading } = useQuery({
     queryKey: ['upcoming-events'],
     queryFn: async () => {
       try {
@@ -102,23 +103,35 @@ export default function Index() {
     },
   });
 
+  // Show error toast when there's an error
+  useEffect(() => {
+    if (newsError) {
+      toast.error('Failed to load news. Please try again later.');
+    }
+    if (adsError) {
+      toast.error('Failed to load advertisements.');
+    }
+  }, [newsError, adsError]);
+
+  const isLoading = isNewsLoading || isAdsLoading || isEventsLoading;
+
   return (
     <div className="container mx-auto px-4 py-8">
-      {advertisements && advertisements.length > 0 && (
+      {advertisements && (
         <div className="mb-8">
           <a
-            href={advertisements[0].link_url}
+            href={advertisements.link_url}
             target="_blank"
             rel="noopener noreferrer"
             className="block"
           >
             <Card className="overflow-hidden">
               <div className="relative h-96">
-                {advertisements[0].image_url && (
+                {advertisements.image_url && (
                   <>
                     <img
-                      src={advertisements[0].image_url}
-                      alt={advertisements[0].title}
+                      src={advertisements.image_url}
+                      alt={advertisements.title}
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
@@ -126,10 +139,10 @@ export default function Index() {
                 )}
                 <div className="absolute bottom-0 left-0 right-0 p-8">
                   <h2 className="text-4xl font-bold text-white mb-4">
-                    {advertisements[0].title}
+                    {advertisements.title}
                   </h2>
                   <p className="text-xl text-white/90">
-                    {advertisements[0].description}
+                    {advertisements.description}
                   </p>
                 </div>
               </div>
@@ -175,15 +188,14 @@ export default function Index() {
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
           <ScrollArea className="h-full">
             {isLoading ? (
-              <div className="text-center p-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-                <p>Loading news...</p>
+              <div className="flex items-center justify-center h-full">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
               </div>
-            ) : error ? (
+            ) : newsError ? (
               <div className="text-center p-8 text-red-500">
                 <p>Failed to load news. Please try again later.</p>
-                <pre className="mt-2 text-xs text-left bg-red-50 p-4 rounded">
-                  {error.message}
+                <pre className="mt-2 text-xs text-left bg-red-50 p-4 rounded overflow-auto">
+                  {newsError.message}
                 </pre>
               </div>
             ) : (

@@ -1,13 +1,13 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { corsHeaders } from "../_shared/cors.ts";
 
 const GUARDIAN_API_KEY = Deno.env.get('GUARDIAN_API_KEY');
 const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY');
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
@@ -20,21 +20,38 @@ serve(async (req) => {
       const baseUrl = 'https://content.guardianapis.com/search';
       const today = new Date().toISOString().split('T')[0];
       
+      // Map category to Guardian's section names
+      let section = category.toLowerCase();
+      if (category === "Today's News") {
+        section = ""; // Don't filter by section for today's news
+      }
+      
       const params = new URLSearchParams({
         'api-key': GUARDIAN_API_KEY || '',
-        'section': category.toLowerCase(),
         'show-fields': 'thumbnail,bodyText',
         'page-size': '10',
         'order-by': 'newest',
-        ...(isToday && { 'from-date': today, 'to-date': today }),
       });
 
-      console.log('Fetching from Guardian API:', `${baseUrl}?${params}`);
+      // Only add section parameter if we have a specific section
+      if (section && section !== "top stories") {
+        params.append('section', section);
+      }
+
+      // Add date filters for today's news
+      if (isToday) {
+        params.append('from-date', today);
+        params.append('to-date', today);
+      }
+
+      const url = `${baseUrl}?${params}`;
+      console.log('Fetching from Guardian API:', url);
       
-      const response = await fetch(`${baseUrl}?${params}`);
+      const response = await fetch(url);
       const data = await response.json();
       
       if (!response.ok) {
+        console.error('Guardian API error:', data);
         throw new Error(`Guardian API error: ${data.message || response.statusText}`);
       }
       
