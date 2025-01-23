@@ -13,20 +13,29 @@ export const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
   const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user || null);
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
+      try {
+        setIsLoading(true);
+        const { data: { session } } = await supabase.auth.getSession();
+        setUser(session?.user || null);
         
-        setIsAdmin(profile?.is_admin || false);
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('is_admin')
+            .eq('id', session.user.id)
+            .single();
+          
+          setIsAdmin(profile?.is_admin || false);
+        }
+      } catch (error) {
+        console.error('Error checking user:', error);
+        toast.error('Failed to check user status');
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -49,6 +58,12 @@ export const Layout = ({ children }: LayoutProps) => {
       toast.error(error.message);
     }
   };
+
+  if (isLoading) {
+    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      Loading...
+    </div>;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
