@@ -123,6 +123,13 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
                   webTitle: item.content.title,
                   webPublicationDate: item.content.created_at,
                   webUrl: item.content.link_url,
+                  apiUrl: item.content.link_url, // Added apiUrl to match GuardianArticle type
+                  type: 'advertisement',
+                  sectionId: 'advertisement',
+                  sectionName: 'Advertisement',
+                  isHosted: false,
+                  pillarId: '',
+                  pillarName: '',
                   fields: {
                     thumbnail: item.content.image_url,
                     bodyText: item.content.description
