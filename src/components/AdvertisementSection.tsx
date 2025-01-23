@@ -12,9 +12,20 @@ import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
 export const AdvertisementSection = () => {
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true }, [
-    Autoplay({ delay: 5000, stopOnInteraction: false }),
-  ]);
+  const autoplay = Autoplay({
+    delay: 5000,
+    stopOnInteraction: false,
+    stopOnMouseEnter: true,
+    rootNode: (emblaRoot) => emblaRoot.parentElement,
+  });
+
+  const [emblaRef] = useEmblaCarousel(
+    { 
+      loop: true,
+      align: "start",
+    },
+    [autoplay]
+  );
 
   const { data: advertisements } = useQuery({
     queryKey: ['active-advertisements'],
