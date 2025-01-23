@@ -11,7 +11,7 @@ interface NewsSectionProps {
 }
 
 export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectionProps) => {
-  const { data: newsData, isLoading, error } = useQuery({
+  const { data: newsData, isLoading: isNewsLoading, error: newsError } = useQuery({
     queryKey: ['news', selectedCategory, selectedNewsAgency],
     queryFn: async () => {
       try {
@@ -42,7 +42,23 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
-  if (isLoading) {
+  const { data: advertisements } = useQuery({
+    queryKey: ['active-advertisements'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('advertisements')
+        .select('*')
+        .eq('active', true)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      return data || [];
+    },
+    retry: 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  if (isNewsLoading) {
     return (
       <div className="flex items-center justify-center h-full">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -50,7 +66,7 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     );
   }
 
-  if (error) {
+  if (newsError) {
     return (
       <Alert variant="destructive" className="mb-4">
         <AlertTitle>Error</AlertTitle>
@@ -58,7 +74,7 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
           Failed to load news. Please try again later.
           {process.env.NODE_ENV === 'development' && (
             <pre className="mt-2 text-xs bg-red-50/10 p-2 rounded overflow-auto">
-              {error.message}
+              {newsError.message}
             </pre>
           )}
         </AlertDescription>
@@ -66,15 +82,55 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     );
   }
 
+  // Combine news articles with advertisements
+  const combinedContent = [];
+  const newsItems = newsData?.response?.results || [];
+  const adItems = advertisements || [];
+
+  // Insert an advertisement after every 3 news articles
+  newsItems.forEach((article, index) => {
+    combinedContent.push({
+      type: 'news',
+      content: article,
+    });
+
+    // After every 3 news articles, add an advertisement if available
+    if ((index + 1) % 3 === 0) {
+      const adIndex = Math.floor(index / 3) % adItems.length;
+      if (adItems[adIndex]) {
+        combinedContent.push({
+          type: 'ad',
+          content: adItems[adIndex],
+        });
+      }
+    }
+  });
+
   return (
     <ScrollArea className="h-full">
       <div className="space-y-6 pb-6">
-        {newsData?.response?.results?.map((article) => (
-          <div key={article.id} className="h-[80vh] min-h-[600px]">
-            <NewsCard
-              article={article}
-              category={selectedCategory}
-            />
+        {combinedContent.map((item, index) => (
+          <div key={`${item.type}-${index}`} className="h-[80vh] min-h-[600px]">
+            {item.type === 'news' ? (
+              <NewsCard
+                article={item.content}
+                category={selectedCategory}
+              />
+            ) : (
+              <NewsCard
+                article={{
+                  id: item.content.id,
+                  webTitle: item.content.title,
+                  webPublicationDate: item.content.created_at,
+                  webUrl: item.content.link_url,
+                  fields: {
+                    thumbnail: item.content.image_url,
+                    bodyText: item.content.description
+                  }
+                }}
+                category="Advertisement"
+              />
+            )}
           </div>
         ))}
       </div>
