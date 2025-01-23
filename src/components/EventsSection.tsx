@@ -20,14 +20,22 @@ export const EventsSection = () => {
   const { data: events } = useQuery({
     queryKey: ['upcoming-events'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('special_events')
-        .select('*')
-        .gte('event_date', new Date().toISOString().split('T')[0])
-        .order('event_date', { ascending: true });
-      
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await supabase
+          .from('special_events')
+          .select('*')
+          .gte('event_date', new Date().toISOString().split('T')[0])
+          .order('event_date', { ascending: true });
+        
+        if (error) {
+          console.error('Error fetching events:', error);
+          return [];
+        }
+        return data || [];
+      } catch (error) {
+        console.error('Error in events query:', error);
+        return [];
+      }
     },
     retry: 2,
     staleTime: 5 * 60 * 1000,

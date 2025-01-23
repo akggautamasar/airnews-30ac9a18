@@ -8,7 +8,6 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { useEffect } from "react";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -20,14 +19,22 @@ export const AdvertisementSection = () => {
   const { data: advertisements } = useQuery({
     queryKey: ['active-advertisements'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('advertisements')
-        .select('*')
-        .eq('active', true)
-        .order('created_at', { ascending: false });
-      
-      if (error) throw error;
-      return data || [];
+      try {
+        const { data, error } = await supabase
+          .from('advertisements')
+          .select('*')
+          .eq('active', true)
+          .order('created_at', { ascending: false });
+        
+        if (error) {
+          console.error('Error fetching advertisements:', error);
+          return [];
+        }
+        return data || [];
+      } catch (error) {
+        console.error('Error in advertisement query:', error);
+        return [];
+      }
     },
     retry: 2,
     staleTime: 5 * 60 * 1000,
