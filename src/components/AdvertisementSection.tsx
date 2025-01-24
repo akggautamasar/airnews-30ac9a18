@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -43,6 +42,8 @@ export const AdvertisementSection = () => {
     },
     retry: 2,
     staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: true,
   });
 
   if (!advertisements?.length) return null;
