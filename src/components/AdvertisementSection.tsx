@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
+import { Loader2 } from "lucide-react";
 
 export const AdvertisementSection = () => {
   const [emblaRef] = useEmblaCarousel(
@@ -21,10 +22,11 @@ export const AdvertisementSection = () => {
     [Autoplay({ delay: 5000, stopOnInteraction: false })]
   );
 
-  const { data: advertisements } = useQuery({
+  const { data: advertisements, isLoading, error } = useQuery({
     queryKey: ['active-advertisements'],
     queryFn: async () => {
       try {
+        console.log('Fetching advertisements...');
         const { data, error } = await supabase
           .from('advertisements')
           .select('*')
@@ -33,12 +35,13 @@ export const AdvertisementSection = () => {
         
         if (error) {
           console.error('Error fetching advertisements:', error);
-          return [];
+          throw error;
         }
+        console.log('Advertisements fetched:', data);
         return data || [];
       } catch (error) {
         console.error('Error in advertisement query:', error);
-        return [];
+        throw error;
       }
     },
     retry: 2,
@@ -47,7 +50,31 @@ export const AdvertisementSection = () => {
     refetchOnMount: true,
   });
 
-  if (!advertisements?.length) return null;
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-48">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (error) {
+    console.error('Advertisement error:', error);
+    return (
+      <div className="text-center py-8 text-red-500">
+        Error loading advertisements
+      </div>
+    );
+  }
+
+  if (!advertisements?.length) {
+    console.log('No advertisements found');
+    return (
+      <div className="text-center py-8 text-gray-500">
+        No advertisements available
+      </div>
+    );
+  }
 
   return (
     <div className="mb-8">
@@ -57,6 +84,7 @@ export const AdvertisementSection = () => {
           align: "center",
           loop: true,
         }}
+        className="w-full"
       >
         <CarouselContent>
           {advertisements.map((advertisement) => (
