@@ -1,6 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card } from "@/components/ui/card";
 import {
   Carousel,
   CarouselContent,
@@ -10,7 +9,9 @@ import {
 } from "@/components/ui/carousel";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
-import { Loader2 } from "lucide-react";
+import { AdvertisementCarouselItem } from "./advertisements/AdvertisementCarouselItem";
+import { AdvertisementLoadingState } from "./advertisements/AdvertisementLoadingState";
+import { AdvertisementErrorState } from "./advertisements/AdvertisementErrorState";
 
 export const AdvertisementSection = () => {
   const [emblaRef] = useEmblaCarousel(
@@ -51,29 +52,17 @@ export const AdvertisementSection = () => {
   });
 
   if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-48">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
+    return <AdvertisementLoadingState />;
   }
 
   if (error) {
     console.error('Advertisement error:', error);
-    return (
-      <div className="text-center py-8 text-red-500">
-        Error loading advertisements
-      </div>
-    );
+    return <AdvertisementErrorState message="Error loading advertisements" />;
   }
 
   if (!advertisements?.length) {
     console.log('No advertisements found');
-    return (
-      <div className="text-center py-8 text-gray-500">
-        No advertisements available
-      </div>
-    );
+    return <AdvertisementErrorState message="No advertisements available" />;
   }
 
   return (
@@ -89,35 +78,7 @@ export const AdvertisementSection = () => {
         <CarouselContent>
           {advertisements.map((advertisement) => (
             <CarouselItem key={advertisement.id}>
-              <a
-                href={advertisement.link_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block"
-              >
-                <Card className="overflow-hidden">
-                  <div className="relative h-96">
-                    {advertisement.image_url && (
-                      <>
-                        <img
-                          src={advertisement.image_url}
-                          alt={advertisement.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/50 to-transparent" />
-                      </>
-                    )}
-                    <div className="absolute bottom-0 left-0 right-0 p-8">
-                      <h2 className="text-4xl font-bold text-white mb-4">
-                        {advertisement.title}
-                      </h2>
-                      <p className="text-xl text-white/90">
-                        {advertisement.description}
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              </a>
+              <AdvertisementCarouselItem advertisement={advertisement} />
             </CarouselItem>
           ))}
         </CarouselContent>
