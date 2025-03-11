@@ -1,9 +1,10 @@
+
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { EventManagement } from "@/components/admin/EventManagement";
-import { AdvertisementManagement } from "@/components/admin/AdvertisementManagement";
+import { EventForm } from "@/components/admin/EventForm";
+import { AdvertisementForm } from "@/components/admin/AdvertisementForm";
 import { useQuery } from "@tanstack/react-query";
 
 export default function Admin() {
@@ -43,18 +44,18 @@ export default function Admin() {
     <div className="container mx-auto p-8">
       <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
       
-      <Tabs defaultValue="events" className="w-full">
+      <Tabs defaultValue="advertisements" className="w-full">
         <TabsList className="mb-8">
-          <TabsTrigger value="events">Events</TabsTrigger>
           <TabsTrigger value="advertisements">Advertisements</TabsTrigger>
+          <TabsTrigger value="events">Events</TabsTrigger>
         </TabsList>
         
-        <TabsContent value="events">
-          <EventManagement />
+        <TabsContent value="advertisements">
+          <AdvertisementForm />
         </TabsContent>
         
-        <TabsContent value="advertisements">
-          <AdvertisementManagement />
+        <TabsContent value="events">
+          <EventForm />
         </TabsContent>
       </Tabs>
     </div>
