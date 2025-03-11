@@ -24,14 +24,17 @@ export const AdvertisementForm = ({ onSuccess }: { onSuccess?: () => void }) => 
 
     try {
       setIsSubmitting(true);
-      const { data: session } = await supabase.auth.getSession();
+      const { data } = await supabase.auth.getSession();
+      
+      // Fix: properly access the user ID from the session data
+      const userId = data.session?.user?.id;
       
       const { error } = await supabase.from('advertisements').insert({
         title,
         description,
         image_url: imageUrl,
         link_url: linkUrl,
-        created_by: session?.user?.id,
+        created_by: userId,
         active: true
       });
 
