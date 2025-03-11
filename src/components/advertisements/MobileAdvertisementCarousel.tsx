@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -11,11 +10,11 @@ import {
   CarouselItem,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import useEmblaCarousel from 'embla-carousel-react';
+import useEmblaCarousel, { EmblaCarouselType } from 'embla-carousel-react';
 
 export const MobileAdvertisementCarousel = () => {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
-  const [emblaRef] = useEmblaCarousel(
+  const [emblaRef, emblaApi] = useEmblaCarousel(
     {
       loop: true,
       align: 'center',
@@ -80,7 +79,8 @@ export const MobileAdvertisementCarousel = () => {
     );
   }
 
-  const handleSelect = (index: number) => {
+  const handleSelect = (api: EmblaCarouselType) => {
+    const index = api.selectedScrollSnap();
     setCurrentAdIndex(index);
   };
 
@@ -89,14 +89,14 @@ export const MobileAdvertisementCarousel = () => {
       <Carousel
         ref={emblaRef}
         className="h-full w-full"
-        onSelect={(e) => {
-          if (emblaRef.current) {
-            handleSelect(emblaRef.current.selectedScrollSnap());
+        onSelect={() => {
+          if (emblaApi) {
+            handleSelect(emblaApi);
           }
         }}
       >
         <CarouselContent className="h-full">
-          {advertisements.map((ad) => (
+          {advertisements?.map((ad) => (
             <CarouselItem key={ad.id} className="h-full w-full flex items-center justify-center">
               <div className="relative h-full w-full">
                 {ad.image_url ? (
