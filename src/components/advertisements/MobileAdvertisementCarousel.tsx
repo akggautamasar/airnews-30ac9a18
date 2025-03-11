@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,7 +11,7 @@ import {
   CarouselItem,
 } from '@/components/ui/carousel';
 import Autoplay from 'embla-carousel-autoplay';
-import useEmblaCarousel, { EmblaCarouselType } from 'embla-carousel-react';
+import useEmblaCarousel, { type UseEmblaCarouselType } from 'embla-carousel-react';
 
 export const MobileAdvertisementCarousel = () => {
   const [currentAdIndex, setCurrentAdIndex] = useState(0);
@@ -79,7 +80,8 @@ export const MobileAdvertisementCarousel = () => {
     );
   }
 
-  const handleSelect = (api: EmblaCarouselType) => {
+  const handleSelect = (api: UseEmblaCarouselType[1]) => {
+    if (!api) return;
     const index = api.selectedScrollSnap();
     setCurrentAdIndex(index);
   };

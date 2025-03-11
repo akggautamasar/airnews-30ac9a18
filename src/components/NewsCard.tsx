@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,6 @@ import { toast } from "sonner";
 import { NewsCardProps } from "@/types/news";
 import { format } from "date-fns";
 import { motion } from "framer-motion";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useNavigate } from "react-router-dom";
 
 export const NewsCard = ({ article, category }: NewsCardProps) => {
@@ -86,13 +86,8 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="h-full w-full"
-    >
-      <Card className="h-full overflow-hidden relative">
+    <motion.div className="h-full w-full select-none">
+      <Card className="h-full overflow-hidden relative border-none">
         {article.fields?.thumbnail && (
           <div className="absolute inset-0 bg-black/20 h-1/2">
             <img
@@ -102,17 +97,17 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
             />
           </div>
         )}
-        <CardContent className="relative h-full flex flex-col p-6">
+        <CardContent className="relative h-full flex flex-col p-0">
           <div className="h-1/2" />
-          <ScrollArea className="flex-1 -mt-12">
-            <div className="space-y-6 bg-gradient-to-t from-black/95 via-black/85 to-black/70 p-6 rounded-t-3xl">
+          <div className="flex-1 mt-[-3rem] flex flex-col">
+            <div className="space-y-6 bg-gradient-to-t from-black/95 via-black/85 to-black/70 p-6 rounded-t-3xl h-full">
               <h2 className="text-3xl font-bold leading-tight text-[#9b87f5]">
                 {article.webTitle}
               </h2>
               <p className="text-lg text-white/90 leading-relaxed">
                 {article.fields?.bodyText}
               </p>
-              <div className="flex items-center justify-between pt-4">
+              <div className="flex items-center justify-between pt-4 mt-auto">
                 <span className="text-sm text-white/80">
                   {format(new Date(article.webPublicationDate), 'PPP')}
                 </span>
@@ -147,7 +142,7 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
                 Read full article
               </a>
             </div>
-          </ScrollArea>
+          </div>
         </CardContent>
       </Card>
     </motion.div>
