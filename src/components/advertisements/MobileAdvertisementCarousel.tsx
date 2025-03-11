@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -79,12 +80,20 @@ export const MobileAdvertisementCarousel = () => {
     );
   }
 
+  const handleSelect = (index: number) => {
+    setCurrentAdIndex(index);
+  };
+
   return (
     <div className="h-screen w-full overflow-hidden relative bg-black">
       <Carousel
         ref={emblaRef}
         className="h-full w-full"
-        onSelect={setCurrentAdIndex}
+        onSelect={(e) => {
+          if (emblaRef.current) {
+            handleSelect(emblaRef.current.selectedScrollSnap());
+          }
+        }}
       >
         <CarouselContent className="h-full">
           {advertisements.map((ad) => (
