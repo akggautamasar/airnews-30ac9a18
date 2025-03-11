@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -9,7 +10,14 @@ import Admin from "./pages/Admin";
 import Auth from "./pages/Auth";
 import { Layout } from "./components/Layout";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 60 * 1000,
+      refetchOnWindowFocus: false,
+    },
+  },
+});
 
 function App() {
   return (
