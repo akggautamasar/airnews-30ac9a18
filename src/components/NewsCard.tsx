@@ -1,8 +1,7 @@
-
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bookmark, Share2 } from "lucide-react";
+import { Bookmark, Share2, ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { NewsCardProps } from "@/types/news";
@@ -14,6 +13,7 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
   const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
+  const [showFullArticle, setShowFullArticle] = useState(false);
 
   const handleBookmark = async () => {
     try {
@@ -85,6 +85,8 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     }
   };
 
+  const summaryText = article.fields?.bodyText?.slice(0, 100) + "...";
+
   return (
     <motion.div className="h-full w-full select-none">
       <Card className="h-full overflow-hidden relative border-none">
@@ -100,14 +102,16 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
         <CardContent className="relative h-full flex flex-col p-0">
           <div className="h-1/2" />
           <div className="flex-1 mt-[-3rem] flex flex-col">
-            <div className="space-y-6 bg-gradient-to-t from-black/95 via-black/85 to-black/70 p-6 rounded-t-3xl h-full">
-              <h2 className="text-3xl font-bold leading-tight text-[#9b87f5]">
+            <div className="space-y-4 bg-gradient-to-t from-black/95 via-black/85 to-black/70 p-6 rounded-t-3xl h-full">
+              <h2 className="text-2xl font-bold leading-tight text-[#9b87f5]">
                 {article.webTitle}
               </h2>
-              <p className="text-lg text-white/90 leading-relaxed">
-                {article.fields?.bodyText}
+              
+              <p className="text-base text-white/90 leading-relaxed">
+                {showFullArticle ? article.fields?.bodyText : summaryText}
               </p>
-              <div className="flex items-center justify-between pt-4 mt-auto">
+
+              <div className="flex items-center justify-between pt-2">
                 <span className="text-sm text-white/80">
                   {format(new Date(article.webPublicationDate), 'PPP')}
                 </span>
@@ -133,14 +137,26 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
                   </Button>
                 </div>
               </div>
-              <a
-                href={article.webUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-2 text-sm text-white/90 hover:text-white underline"
-              >
-                Read full article
-              </a>
+
+              <div className="flex justify-between items-center gap-4 mt-2">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowFullArticle(!showFullArticle)}
+                  className="text-white hover:text-white/80 flex items-center gap-2"
+                >
+                  {showFullArticle ? "Show Less" : "Read More"}
+                  <ChevronDown className={`h-4 w-4 transition-transform ${showFullArticle ? "rotate-180" : ""}`} />
+                </Button>
+                
+                <a
+                  href={article.webUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-sm text-white/90 hover:text-white underline"
+                >
+                  View Original
+                </a>
+              </div>
             </div>
           </div>
         </CardContent>
