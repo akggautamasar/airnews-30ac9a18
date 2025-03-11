@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -50,7 +49,6 @@ export const MobileAdvertisementCarousel = () => {
     staleTime: 5 * 60 * 1000,
   });
 
-  // Track the current advertisement for potential background updates
   useEffect(() => {
     if (!advertisements || advertisements.length === 0) return;
     
@@ -58,8 +56,6 @@ export const MobileAdvertisementCarousel = () => {
       setCurrentAdIndex(e.selectedScrollSnap());
     };
     
-    // This would be where we'd integrate with native APIs
-    // to update the lockscreen wallpaper in a real implementation
     console.log('Current ad for lockscreen:', advertisements[currentAdIndex]?.title);
     
     return () => {
@@ -88,7 +84,7 @@ export const MobileAdvertisementCarousel = () => {
       <Carousel
         ref={emblaRef}
         className="h-full w-full"
-        onSelect={(index) => setCurrentAdIndex(index)}
+        onSelect={setCurrentAdIndex}
       >
         <CarouselContent className="h-full">
           {advertisements.map((ad) => (
