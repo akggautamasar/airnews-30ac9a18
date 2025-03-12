@@ -88,26 +88,32 @@ async function fetchFromQwen(category: string) {
   console.log(`Fetching ${category} news from Qwen API`);
   
   try {
+    // Using more robust error handling as shown in the sample code
+    const payload = {
+      model: "qwen-max",
+      messages: [
+        {
+          role: "system",
+          content: "You are a news curator that provides the latest trending news in a structured format."
+        },
+        {
+          role: "user",
+          content: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+        }
+      ],
+      temperature: 0.7
+    };
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${QWEN_API_KEY}`
+    };
+    
+    // Making the fetch request with proper error handling
     const response = await fetch('https://api.qwen.ai/v1/chat/completions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${QWEN_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "qwen-max",
-        messages: [
-          {
-            role: "system",
-            content: "You are a news curator that provides the latest trending news in a structured format."
-          },
-          {
-            role: "user",
-            content: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
-          }
-        ],
-        temperature: 0.7
-      })
+      headers: headers,
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
@@ -160,30 +166,34 @@ async function fetchFromGemini(category: string) {
   console.log(`Fetching ${category} news from Gemini API`);
   
   try {
+    const payload = {
+      contents: [
+        {
+          parts: [
+            {
+              text: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+            }
+          ],
+          role: "user"
+        }
+      ],
+      generationConfig: {
+        temperature: 0.7,
+        topK: 32,
+        topP: 0.95,
+        maxOutputTokens: 1024,
+      }
+    };
+    
+    const headers = {
+      'Content-Type': 'application/json',
+      'x-goog-api-key': GEMINI_API_KEY!
+    };
+    
     const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-goog-api-key': GEMINI_API_KEY!
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
-              }
-            ],
-            role: "user"
-          }
-        ],
-        generationConfig: {
-          temperature: 0.7,
-          topK: 32,
-          topP: 0.95,
-          maxOutputTokens: 1024,
-        }
-      })
+      headers: headers,
+      body: JSON.stringify(payload)
     });
 
     if (!response.ok) {
