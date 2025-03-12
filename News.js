@@ -12,7 +12,7 @@ export default function News() {
 
     return (
         <div>
-            <h2>Top AI-Generated News</h2>
+            <h2>Google News</h2>
             <div className="news-container">
                 {news.map((item, index) => (
                     <div key={index} className="news-card">
