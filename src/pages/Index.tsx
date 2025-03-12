@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
@@ -33,11 +33,16 @@ export default function Index() {
   const [selectedNewsAgency, setSelectedNewsAgency] = useState('guardian');
   const [activeTab, setActiveTab] = useState('standard');
 
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    toast.info(`Switched to ${value === 'standard' ? 'Standard News' : 'AI Curated News'}`);
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
       <AdvertisementSection />
       
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+      <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
         <TabsList className="w-full">
           <TabsTrigger value="standard" className="flex-1">Standard News</TabsTrigger>
           <TabsTrigger value="ai" className="flex-1">AI Curated News</TabsTrigger>

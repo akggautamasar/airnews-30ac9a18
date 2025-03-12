@@ -1,5 +1,5 @@
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { NewsCard } from '@/components/NewsCard';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Loader2, RefreshCw } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface AiNewsItem {
   headline: string;
@@ -28,15 +29,23 @@ export const AiNewsSection = () => {
     queryKey: ['ai-news'],
     queryFn: async () => {
       try {
+        console.log('Fetching AI news...');
         const response = await supabase.functions.invoke('fetch-ai-news');
-        if (response.error) throw new Error(response.error.message);
+        if (response.error) {
+          console.error('Error from fetch-ai-news function:', response.error);
+          throw new Error(response.error.message);
+        }
+        console.log('AI news response:', response.data);
         return response.data as AiNewsData;
       } catch (error) {
         console.error('Error fetching AI news:', error);
+        toast.error('Failed to load AI news. Please try again later.');
         throw error;
       }
     },
     staleTime: 60 * 60 * 1000, // 1 hour
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });
 
   const categories = [
@@ -54,19 +63,27 @@ export const AiNewsSection = () => {
     id: `ai-${item.headline.replace(/\s+/g, '-').toLowerCase()}`,
     webTitle: item.headline,
     webPublicationDate: aiNews?.date || new Date().toISOString(),
-    webUrl: item.source,
-    apiUrl: item.source,
+    webUrl: item.source || "https://example.com",
+    apiUrl: item.source || "https://example.com",
     type: 'article',
     sectionId: item.category.toLowerCase(),
     sectionName: item.category,
     isHosted: false,
     pillarId: '',
-    pillarName: item.provider === 'deepseek' ? 'DeepSeek AI' : 'Qwen AI',
+    pillarName: item.provider === 'deepseek' ? 'DeepSeek AI' : item.provider === 'qwen' ? 'Qwen AI' : 'AI Generated',
     fields: {
       thumbnail: '', // No thumbnail available from AI-generated news
       bodyText: item.summary
     }
   }));
+
+  const handleRefresh = () => {
+    toast.promise(refetch(), {
+      loading: 'Refreshing AI news...',
+      success: 'AI news refreshed successfully',
+      error: 'Failed to refresh AI news'
+    });
+  };
 
   return (
     <div className="space-y-4">
@@ -75,7 +92,7 @@ export const AiNewsSection = () => {
         <Button 
           variant="outline" 
           size="sm" 
-          onClick={() => refetch()} 
+          onClick={handleRefresh} 
           disabled={isFetching}
           className="flex gap-2"
         >
