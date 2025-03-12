@@ -1,3 +1,4 @@
+
 import { Json } from "@/integrations/supabase/types";
 
 export interface CategoryNavProps {
@@ -39,4 +40,12 @@ export interface GuardianArticle {
 export interface UserPreferences {
   view_mode: 'card' | 'list';
   categories: string[];
+}
+
+export interface AiNewsItem {
+  headline: string;
+  summary: string;
+  source: string;
+  category: string;
+  provider: string;
 }
