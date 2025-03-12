@@ -5,6 +5,7 @@ import { corsHeaders } from "../_shared/cors.ts";
 
 const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
 const QWEN_API_KEY = Deno.env.get('QWEN_API_KEY');
+const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
 const SUPABASE_ANON_KEY = Deno.env.get('SUPABASE_ANON_KEY');
 
@@ -154,6 +155,82 @@ async function fetchFromQwen(category: string) {
   }
 }
 
+// Function to fetch news from Gemini API
+async function fetchFromGemini(category: string) {
+  console.log(`Fetching ${category} news from Gemini API`);
+  
+  try {
+    const response = await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-pro:generateContent', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-goog-api-key': GEMINI_API_KEY!
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: `As a news curator, please provide the top 5 trending news articles from today in the ${category} category. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+              }
+            ],
+            role: "user"
+          }
+        ],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 32,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`Gemini API error for ${category}: Status ${response.status}`, errorText);
+      return [];
+    }
+
+    const data = await response.json();
+    
+    // Extract JSON from the text response
+    const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!content) {
+      console.error(`Gemini API returned empty content for ${category}`);
+      return [];
+    }
+    
+    let newsItems = [];
+    
+    try {
+      // Try to find JSON in the response
+      const jsonMatch = content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        newsItems = JSON.parse(jsonMatch[0]);
+      } else {
+        // Try parsing the entire response if it might be valid JSON
+        try {
+          newsItems = JSON.parse(content);
+        } catch {
+          console.error(`Could not extract JSON from Gemini response for ${category}`);
+        }
+      }
+    } catch (error) {
+      console.error(`Error parsing Gemini JSON for ${category}:`, error);
+    }
+
+    return Array.isArray(newsItems) ? newsItems.map((item: any) => ({
+      ...item,
+      provider: "gemini",
+      category
+    })) : [];
+  } catch (error) {
+    console.error(`Error fetching from Gemini for ${category}:`, error);
+    return [];
+  }
+}
+
 // Generate mock news when real APIs fail
 function generateMockNews() {
   const categories = ["Politics", "Business", "Technology", "Health", "Entertainment"];
@@ -200,11 +277,12 @@ serve(async (req) => {
       });
     }
 
-    // Fetch news from both providers for each category
+    // Fetch news from all three providers for each category
     const fetchPromises = [];
     for (const category of categories) {
       fetchPromises.push(fetchFromDeepSeek(category));
       fetchPromises.push(fetchFromQwen(category));
+      fetchPromises.push(fetchFromGemini(category));
     }
     
     // Wait for all API calls to complete

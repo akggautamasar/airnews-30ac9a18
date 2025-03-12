@@ -58,6 +58,17 @@ export const AiNewsSection = () => {
       : aiNews.news.filter(item => item.category === selectedCategory)
     : [];
 
+  // Get provider display name
+  const getProviderName = (provider: string) => {
+    switch (provider) {
+      case 'deepseek': return 'DeepSeek AI';
+      case 'qwen': return 'Qwen AI';
+      case 'gemini': return 'Gemini AI';
+      case 'mock': return 'Mock Data';
+      default: return 'AI Generated';
+    }
+  };
+
   // Transform AI news to the format expected by NewsCard
   const transformedNews = filteredNews.map(item => ({
     id: `ai-${item.headline.replace(/\s+/g, '-').toLowerCase()}`,
@@ -70,7 +81,7 @@ export const AiNewsSection = () => {
     sectionName: item.category,
     isHosted: false,
     pillarId: '',
-    pillarName: item.provider === 'deepseek' ? 'DeepSeek AI' : item.provider === 'qwen' ? 'Qwen AI' : 'AI Generated',
+    pillarName: getProviderName(item.provider),
     fields: {
       thumbnail: '', // No thumbnail available from AI-generated news
       bodyText: item.summary
