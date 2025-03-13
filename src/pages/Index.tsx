@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -25,7 +24,8 @@ const newsAgencies = [
   { id: 'guardian', name: 'The Guardian' },
   { id: 'newsapi', name: 'News API' },
   { id: 'custom', name: 'The News API' },
-  { id: 'ai', name: 'AI Generated' }
+  { id: 'ai', name: 'AI Generated' },
+  { id: 'google', name: 'Google News' } // Added Google News
 ];
 
 export default function Index() {
@@ -40,7 +40,10 @@ export default function Index() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <AdvertisementSection />
+      <div className="flex flex-col md:flex-row gap-8">
+        <AdvertisementSection />
+        <EventsSection />
+      </div>
       
       <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
         <TabsList className="w-full">
@@ -75,7 +78,6 @@ export default function Index() {
               />
             </>
           )}
-          <EventsSection />
         </aside>
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
           {activeTab === 'standard' ? (
