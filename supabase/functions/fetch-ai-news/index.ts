@@ -31,7 +31,7 @@ async function fetchFromDeepSeek(category: string) {
           },
           {
             role: "user",
-            content: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+            content: `Fetch the latest top 10 news headlines globally or in India from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
           }
         ],
         temperature: 0.7
@@ -88,7 +88,7 @@ async function fetchFromQwen(category: string) {
   console.log(`Fetching ${category} news from Qwen API`);
   
   try {
-    // Using more robust error handling as shown in the sample code
+    // Using more robust error handling
     const payload = {
       model: "qwen-max",
       messages: [
@@ -98,7 +98,7 @@ async function fetchFromQwen(category: string) {
         },
         {
           role: "user",
-          content: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+          content: `Fetch the latest top 10 news headlines globally or in India from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
         }
       ],
       temperature: 0.7
@@ -171,7 +171,7 @@ async function fetchFromGemini(category: string) {
         {
           parts: [
             {
-              text: `Fetch the latest top 10 news headlines globally or in India from today in the ${category} category. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+              text: `Fetch the latest top 10 news headlines globally or in India from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
             }
           ],
           role: "user"
