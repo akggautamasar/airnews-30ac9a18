@@ -1,4 +1,3 @@
- ```typescript
 import { useState } from "react";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -35,7 +34,7 @@ export default function Index() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    toast.info(`Switched to ${value === 'standard' ? 'Standard News' : 'AI Curated News'}`);
+    toast.info(`Switched to ${value === 'standard' ? 'Standard News' : 'AI Curated News'}`); // Corrected line
   };
 
   return (
@@ -93,4 +92,3 @@ export default function Index() {
     </div>
   );
 }
-```
