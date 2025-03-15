@@ -8,6 +8,7 @@ import { AiNewsSection } from "@/components/AiNewsSection";
 import { AdvertisementSection } from "@/components/AdvertisementSection";
 import { EventsSection } from "@/components/EventsSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { GoogleNewsSection } from "@/components/GoogleNewsSection";
 
 const categories = [
   "Today's News",
@@ -25,6 +26,7 @@ const newsAgencies = [
   { id: 'guardian', name: 'The Guardian' },
   { id: 'newsapi', name: 'News API' },
   { id: 'custom', name: 'The News API' },
+  { id: 'google', name: 'Google News' },
   { id: 'ai', name: 'AI Generated' }
 ];
 
@@ -79,10 +81,14 @@ export default function Index() {
         </aside>
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
           {activeTab === 'standard' ? (
-            <NewsSection 
-              selectedCategory={selectedCategory}
-              selectedNewsAgency={selectedNewsAgency === 'ai' ? 'guardian' : selectedNewsAgency}
-            />
+            selectedNewsAgency === 'google' ? (
+              <GoogleNewsSection />
+            ) : (
+              <NewsSection 
+                selectedCategory={selectedCategory}
+                selectedNewsAgency={selectedNewsAgency === 'ai' ? 'guardian' : selectedNewsAgency}
+              />
+            )
           ) : (
             <AiNewsSection />
           )}
