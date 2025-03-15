@@ -43,7 +43,7 @@ export const AiNewsSection = () => {
         throw error;
       }
     },
-    staleTime: 60 * 60 * 1000, // 1 hour
+    staleTime: 30 * 60 * 1000, // 30 minutes (reduced from 1 hour)
     retry: 3,
     retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
   });

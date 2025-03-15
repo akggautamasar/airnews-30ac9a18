@@ -13,7 +13,7 @@ const supabase = createClient(SUPABASE_URL!, SUPABASE_ANON_KEY!);
 
 // Function to fetch news from DeepSeek API
 async function fetchFromDeepSeek(category: string) {
-  console.log(`Fetching ${category} news from DeepSeek API`);
+  console.log(`Fetching ${category} news from DeepSeek API using key: ${DEEPSEEK_API_KEY?.substring(0, 5)}...`);
   
   try {
     const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -31,10 +31,11 @@ async function fetchFromDeepSeek(category: string) {
           },
           {
             role: "user",
-            content: `Fetch the latest top 10 news headlines globally or in India from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+            content: `Fetch the latest top 10 news headlines globally for ${category} category from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
           }
         ],
-        temperature: 0.7
+        temperature: 0.7,
+        max_tokens: 1024
       })
     });
 
@@ -85,7 +86,7 @@ async function fetchFromDeepSeek(category: string) {
 
 // Function to fetch news from Qwen API
 async function fetchFromQwen(category: string) {
-  console.log(`Fetching ${category} news from Qwen API`);
+  console.log(`Fetching ${category} news from Qwen API using key: ${QWEN_API_KEY?.substring(0, 5)}...`);
   
   try {
     // Using more robust error handling
@@ -98,10 +99,11 @@ async function fetchFromQwen(category: string) {
         },
         {
           role: "user",
-          content: `Fetch the latest top 10 news headlines globally or in India from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+          content: `Fetch the latest top 10 news headlines globally for ${category} category from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
         }
       ],
-      temperature: 0.7
+      temperature: 0.7,
+      max_tokens: 1024
     };
     
     const headers = {
@@ -163,7 +165,7 @@ async function fetchFromQwen(category: string) {
 
 // Function to fetch news from Gemini API
 async function fetchFromGemini(category: string) {
-  console.log(`Fetching ${category} news from Gemini API`);
+  console.log(`Fetching ${category} news from Gemini API using key: ${GEMINI_API_KEY?.substring(0, 5)}...`);
   
   try {
     const payload = {
@@ -171,7 +173,7 @@ async function fetchFromGemini(category: string) {
         {
           parts: [
             {
-              text: `Fetch the latest top 10 news headlines globally or in India from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
+              text: `Fetch the latest top 10 news headlines globally for ${category} category from today. Provide a short summary for each news along with the source link. Format the response as a JSON array with each article containing a headline, summary (under 50 words), and source URL. Don't include any explanations or extra text, just return the JSON array.`
             }
           ],
           role: "user"

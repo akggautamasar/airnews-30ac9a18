@@ -17,11 +17,11 @@ export default async function handler(req, res) {
         console.log('Google News API request received');
         
         // Get the API key from environment variables
-        const apiKey = process.env.GOOGLE_NEWS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_NEWS_API_KEY;
+        const apiKey = process.env.GOOGLE_NEWS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_NEWS_API_KEY || process.env.NEWS_API_KEY;
         
         if (!apiKey) {
             console.error("API key not found");
-            throw new Error("Google News API key is not defined");
+            throw new Error("News API key is not defined");
         }
         
         console.log('Using API key:', apiKey.substring(0, 5) + '...');
