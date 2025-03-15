@@ -11,12 +11,14 @@ export default function News() {
         fetch("/api/news")
             .then(response => {
                 if (!response.ok) {
-                    throw new Error("Failed to fetch news");
+                    return response.json().then(data => {
+                        throw new Error(data.message || "Failed to fetch news");
+                    });
                 }
                 return response.json();
             })
             .then(data => {
-                setNews(data.news);
+                setNews(data.news || []);
                 setIsLoading(false);
             })
             .catch(error => {
@@ -27,11 +29,15 @@ export default function News() {
     }, []);
 
     if (isLoading) {
-        return <div>Loading news...</div>;
+        return <div className="p-4 text-center">Loading news...</div>;
     }
 
     if (error) {
-        return <div>Error: {error}</div>;
+        return <div className="p-4 text-red-500 bg-red-50 rounded-md">Error: {error}</div>;
+    }
+
+    if (!news || news.length === 0) {
+        return <div className="p-4 text-center">No news articles available.</div>;
     }
 
     return (
