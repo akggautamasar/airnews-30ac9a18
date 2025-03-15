@@ -2,8 +2,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Loader2 } from "lucide-react";
-import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface GoogleNewsItem {
   headline: string;
@@ -12,30 +12,53 @@ interface GoogleNewsItem {
 }
 
 export const GoogleNewsSection = () => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-
   const { data: news, isLoading, error } = useQuery({
     queryKey: ['google-news'],
     queryFn: async () => {
+      console.log('Fetching Google News');
       const response = await fetch('/api/news');
+      console.log('Google News API response status:', response.status);
+      
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to fetch Google News');
+        try {
+          const errorData = await response.json();
+          console.error('Google News API error:', errorData);
+          throw new Error(errorData.message || 'Failed to fetch Google News');
+        } catch (e) {
+          console.error('Error parsing API response:', e);
+          throw new Error('Failed to fetch Google News: ' + response.statusText);
+        }
       }
-      return response.json();
+      
+      const data = await response.json();
+      console.log('Google News API response data:', data);
+      return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+    retry: 2,
   });
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="h-full space-y-6">
+        <h2 className="text-2xl font-bold">Google News</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(6)].map((_, i) => (
+            <Card key={i} className="overflow-hidden">
+              <CardContent className="p-4">
+                <Skeleton className="h-6 w-3/4 mb-4" />
+                <Skeleton className="h-20 mb-3" />
+                <Skeleton className="h-4 w-1/4" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     );
   }
 
   if (error) {
+    console.error('Google News error:', error);
     return (
       <Alert variant="destructive" className="mb-4">
         <AlertTitle>Error</AlertTitle>
