@@ -44,6 +44,7 @@ export default function Index() {
     // Set URL parameter for RSS feed
     if (value === 'google-rss') {
       setSearchParams({ feed: 'rss' });
+      toast.success("Using Google News RSS Feed");
     } else {
       // Remove feed parameter if it exists
       searchParams.delete('feed');
