@@ -9,6 +9,7 @@ import { AdvertisementSection } from "@/components/AdvertisementSection";
 import { EventsSection } from "@/components/EventsSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoogleNewsSection } from "@/components/GoogleNewsSection";
+import { useSearchParams } from "react-router-dom";
 
 const categories = [
   "Today's News",
@@ -27,6 +28,7 @@ const newsAgencies = [
   { id: 'newsapi', name: 'News API' },
   { id: 'custom', name: 'The News API' },
   { id: 'google', name: 'Google News' },
+  { id: 'google-rss', name: 'Google News RSS' },
   { id: 'ai', name: 'AI Generated' }
 ];
 
@@ -34,6 +36,20 @@ export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState("Today's News");
   const [selectedNewsAgency, setSelectedNewsAgency] = useState('guardian');
   const [activeTab, setActiveTab] = useState('standard');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const handleNewsAgencyChange = (value: string) => {
+    setSelectedNewsAgency(value);
+    
+    // Set URL parameter for RSS feed
+    if (value === 'google-rss') {
+      setSearchParams({ feed: 'rss' });
+    } else {
+      // Remove feed parameter if it exists
+      searchParams.delete('feed');
+      setSearchParams(searchParams);
+    }
+  };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -57,7 +73,7 @@ export default function Index() {
             <>
               <div className="mb-6">
                 <label className="block text-sm font-medium mb-2">Select News Source</label>
-                <Select value={selectedNewsAgency} onValueChange={setSelectedNewsAgency}>
+                <Select value={selectedNewsAgency} onValueChange={handleNewsAgencyChange}>
                   <SelectTrigger>
                     <SelectValue placeholder="Select a news source" />
                   </SelectTrigger>
@@ -81,7 +97,7 @@ export default function Index() {
         </aside>
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
           {activeTab === 'standard' ? (
-            selectedNewsAgency === 'google' ? (
+            selectedNewsAgency === 'google' || selectedNewsAgency === 'google-rss' ? (
               <GoogleNewsSection />
             ) : (
               <NewsSection 

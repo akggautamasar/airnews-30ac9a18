@@ -1,37 +1,44 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2 } from "lucide-react";
+import { Loader2, Rss } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useSearchParams } from "react-router-dom";
 
 interface GoogleNewsItem {
   headline: string;
   summary: string;
   source: string;
+  pubDate?: string;
 }
 
 export const GoogleNewsSection = () => {
+  const [searchParams] = useSearchParams();
+  const useRssFeed = searchParams.get('feed') === 'rss';
+  
+  const endpoint = useRssFeed ? '/api/google-news-rss' : '/api/news';
+  
   const { data: news, isLoading, error } = useQuery({
-    queryKey: ['google-news'],
+    queryKey: ['google-news', useRssFeed ? 'rss' : 'api'],
     queryFn: async () => {
-      console.log('Fetching Google News');
-      const response = await fetch('/api/news');
-      console.log('Google News API response status:', response.status);
+      console.log(`Fetching Google News from ${useRssFeed ? 'RSS feed' : 'News API'}`);
+      const response = await fetch(endpoint);
+      console.log('Google News response status:', response.status);
       
       if (!response.ok) {
         try {
           const errorData = await response.json();
-          console.error('Google News API error:', errorData);
-          throw new Error(errorData.message || 'Failed to fetch Google News');
+          console.error('Google News error:', errorData);
+          throw new Error(errorData.message || `Failed to fetch Google News from ${useRssFeed ? 'RSS feed' : 'API'}`);
         } catch (e) {
           console.error('Error parsing API response:', e);
-          throw new Error('Failed to fetch Google News: ' + response.statusText);
+          throw new Error(`Failed to fetch Google News: ${response.statusText}`);
         }
       }
       
       const data = await response.json();
-      console.log('Google News API response data:', data);
+      console.log('Google News response data:', data);
       return data;
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -41,7 +48,9 @@ export const GoogleNewsSection = () => {
   if (isLoading) {
     return (
       <div className="h-full space-y-6">
-        <h2 className="text-2xl font-bold">Google News</h2>
+        <h2 className="text-2xl font-bold flex items-center gap-2">
+          Google News {useRssFeed && <Rss className="h-5 w-5" />}
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {[...Array(6)].map((_, i) => (
             <Card key={i} className="overflow-hidden">
@@ -63,7 +72,7 @@ export const GoogleNewsSection = () => {
       <Alert variant="destructive" className="mb-4">
         <AlertTitle>Error</AlertTitle>
         <AlertDescription>
-          Failed to load Google News. Please try again later.
+          Failed to load Google News{useRssFeed ? ' RSS feed' : ''}. Please try again later.
           {process.env.NODE_ENV === 'development' && error instanceof Error && (
             <pre className="mt-2 text-xs bg-red-50/10 p-2 rounded overflow-auto">
               {error.message}
@@ -90,13 +99,20 @@ export const GoogleNewsSection = () => {
 
   return (
     <div className="h-full space-y-6">
-      <h2 className="text-2xl font-bold">Google News</h2>
+      <h2 className="text-2xl font-bold flex items-center gap-2">
+        Google News {useRssFeed && <Rss className="h-5 w-5" />}
+      </h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {newsItems.map((item, index) => (
           <Card key={index} className="hover:shadow-md transition-shadow">
             <CardContent className="p-4">
               <h3 className="text-lg font-semibold mb-2">{item.headline}</h3>
               <p className="text-gray-600 mb-3 line-clamp-3">{item.summary}</p>
+              {item.pubDate && (
+                <p className="text-gray-500 text-xs mb-2">
+                  {new Date(item.pubDate).toLocaleString()}
+                </p>
+              )}
               <a 
                 href={item.source} 
                 target="_blank" 
