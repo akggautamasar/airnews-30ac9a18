@@ -28,7 +28,7 @@ export default async function handler(req, res) {
 
     // Get query parameters
     const { category } = req.query;
-    const topic = category || 'breaking-news'; // Default to breaking-news if no category is provided
+    const topic = category ? mapCategoryForGNews(category) : 'breaking-news'; // Default to breaking-news if no category is provided
     
     // Fetch news from GNews API
     const gnewsResponse = await axios.get(
@@ -63,4 +63,21 @@ export default async function handler(req, res) {
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
+};
+
+// Helper function to map general categories to GNews categories
+function mapCategoryForGNews(category) {
+  const categoryMap = {
+    "Today's News": "breaking-news",
+    "Top Stories": "breaking-news",
+    "Technology": "technology",
+    "Business": "business",
+    "Entertainment": "entertainment",
+    "Sports": "sports",
+    "World": "world",
+    "Science": "science",
+    "Health": "health"
+  };
+  
+  return categoryMap[category] || "general";
 }

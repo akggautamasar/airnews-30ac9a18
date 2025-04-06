@@ -27,8 +27,10 @@ const categories = [
 const newsAgencies = [
   { id: 'guardian', name: 'The Guardian' },
   { id: 'newsapi', name: 'News API' },
-  { id: 'custom', name: 'The News API' },
+  { id: 'thenewsapi', name: 'The News API' },
+  { id: 'newsdataio', name: 'NewsData.io' },
   { id: 'mediastack', name: 'Mediastack' },
+  { id: 'worldnewsapi', name: 'World News API' },
   { id: 'google', name: 'Google News' },
   { id: 'google-rss', name: 'Google News RSS' },
   { id: 'gnews', name: 'GNews API' },
@@ -56,6 +58,7 @@ export default function Index() {
       // Remove feed parameter if it exists
       searchParams.delete('feed');
       setSearchParams(searchParams);
+      toast.success(`Now using ${newsAgencies.find(a => a.id === value)?.name || value}`);
     }
   };
 

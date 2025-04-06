@@ -17,7 +17,7 @@ export default async function handler(req, res) {
         console.log('Google News API request received');
         
         // Get the API key from environment variables
-        const apiKey = process.env.GOOGLE_NEWS_API_KEY || process.env.NEXT_PUBLIC_GOOGLE_NEWS_API_KEY || process.env.NEWS_API_KEY;
+        const apiKey = process.env.NEWS_API_KEY || process.env.GOOGLE_NEWS_API_KEY;
         
         if (!apiKey) {
             console.error("API key not found");
@@ -26,11 +26,20 @@ export default async function handler(req, res) {
         
         console.log('Using API key:', apiKey.substring(0, 5) + '...');
 
+        // Get query parameters
+        const { category } = req.query;
+        const source = category ? '' : 'google-news'; // Use google-news source for general news
+        
+        // Build the URL based on whether we have a category or not
+        let url;
+        if (source) {
+            url = `https://newsapi.org/v2/top-headlines?sources=${source}&apiKey=${apiKey}`;
+        } else {
+            url = `https://newsapi.org/v2/top-headlines?category=${category.toLowerCase()}&apiKey=${apiKey}`;
+        }
+
         // Fetch Google News using the News API
-        const googleNewsResponse = await axios.get(
-            `https://newsapi.org/v2/top-headlines?sources=google-news&apiKey=${apiKey}`,
-            { timeout: 10000 }
-        );
+        const googleNewsResponse = await axios.get(url, { timeout: 10000 });
 
         console.log('Google News API response status:', googleNewsResponse.status);
         console.log('Google News API articles count:', googleNewsResponse.data.articles?.length || 0);
@@ -39,7 +48,9 @@ export default async function handler(req, res) {
         const news = googleNewsResponse.data.articles.map(article => ({
             headline: article.title,
             summary: article.description || article.content || "No description available",
-            source: article.url
+            source: article.url,
+            pubDate: article.publishedAt,
+            image: article.urlToImage
         }));
 
         res.status(200).json({ news });
