@@ -2,6 +2,7 @@
 import { motion } from "framer-motion";
 import { NewsCard } from "@/components/NewsCard";
 import { Card, CardContent } from "@/components/ui/card";
+import { useEffect, useState } from "react";
 
 interface ContentItemProps {
   item: {
@@ -12,7 +13,66 @@ interface ContentItemProps {
 }
 
 export const ContentItem = ({ item, category }: ContentItemProps) => {
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  
+  // Fetch alternative image if the article doesn't have one
+  useEffect(() => {
+    if (item.type === 'news' && !item.content.fields?.thumbnail && !item.content.image) {
+      // Get article title or use category as fallback
+      const searchTerm = item.content.webTitle || category;
+      
+      // Randomly select one of the image APIs
+      const imageApis = ['pixabay', 'pexels'];
+      const selectedApi = imageApis[Math.floor(Math.random() * imageApis.length)];
+      
+      const fetchImage = async () => {
+        try {
+          let apiUrl = '';
+          
+          if (selectedApi === 'pixabay') {
+            apiUrl = `/api/image-search?source=pixabay&query=${encodeURIComponent(searchTerm)}`;
+          } else if (selectedApi === 'pexels') {
+            apiUrl = `/api/image-search?source=pexels&query=${encodeURIComponent(searchTerm)}`;
+          }
+          
+          const response = await fetch(apiUrl);
+          const data = await response.json();
+          
+          if (data.imageUrl) {
+            setImageUrl(data.imageUrl);
+          }
+        } catch (error) {
+          console.error('Error fetching alternative image:', error);
+        }
+      };
+      
+      fetchImage();
+    }
+  }, [item, category]);
+
   if (item.type === 'news') {
+    // Use the fetched alternative image if available
+    if (imageUrl && !item.content.fields?.thumbnail && !item.content.image) {
+      // Clone the item to avoid mutating props
+      const enhancedItem = {
+        ...item,
+        content: {
+          ...item.content,
+          fields: {
+            ...item.content.fields,
+            thumbnail: imageUrl
+          }
+        }
+      };
+      
+      return (
+        <NewsCard
+          article={enhancedItem.content}
+          category={category}
+        />
+      );
+    }
+    
     return (
       <NewsCard
         article={item.content}

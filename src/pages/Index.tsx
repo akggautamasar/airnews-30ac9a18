@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -28,12 +27,9 @@ const newsAgencies = [
   { id: 'guardian', name: 'The Guardian' },
   { id: 'newsapi', name: 'News API' },
   { id: 'thenewsapi', name: 'The News API' },
-  { id: 'newsdataio', name: 'NewsData.io' },
-  { id: 'mediastack', name: 'Mediastack' },
-  { id: 'worldnewsapi', name: 'World News API' },
+  { id: 'gnews', name: 'GNews API' },
   { id: 'google', name: 'Google News' },
   { id: 'google-rss', name: 'Google News RSS' },
-  { id: 'gnews', name: 'GNews API' },
   { id: 'ai', name: 'AI Generated' }
 ];
 

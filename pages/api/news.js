@@ -14,7 +14,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        console.log('Google News API request received');
+        console.log('News API request received');
         
         // Get the API key from environment variables
         const apiKey = process.env.NEWS_API_KEY || process.env.GOOGLE_NEWS_API_KEY;
@@ -28,34 +28,44 @@ export default async function handler(req, res) {
 
         // Get query parameters
         const { category } = req.query;
-        const source = category ? '' : 'google-news'; // Use google-news source for general news
         
         // Build the URL based on whether we have a category or not
         let url;
-        if (source) {
-            url = `https://newsapi.org/v2/top-headlines?sources=${source}&apiKey=${apiKey}`;
+        if (!category || category === "Today's News" || category === "Top Stories") {
+            url = `https://newsapi.org/v2/top-headlines?country=us&apiKey=${apiKey}`;
         } else {
-            url = `https://newsapi.org/v2/top-headlines?category=${category.toLowerCase()}&apiKey=${apiKey}`;
+            url = `https://newsapi.org/v2/top-headlines?category=${category.toLowerCase()}&country=us&apiKey=${apiKey}`;
         }
 
-        // Fetch Google News using the News API
-        const googleNewsResponse = await axios.get(url, { timeout: 10000 });
+        console.log('Fetching news from URL:', url);
 
-        console.log('Google News API response status:', googleNewsResponse.status);
-        console.log('Google News API articles count:', googleNewsResponse.data.articles?.length || 0);
+        // Fetch news using the News API
+        const newsApiResponse = await axios.get(url, { timeout: 10000 });
 
-        // Format the response data
-        const news = googleNewsResponse.data.articles.map(article => ({
+        console.log('News API response status:', newsApiResponse.status);
+        console.log('News API articles count:', newsApiResponse.data.articles?.length || 0);
+
+        // Format the response data to match our expected format
+        const news = newsApiResponse.data.articles.map((article, index) => ({
             headline: article.title,
             summary: article.description || article.content || "No description available",
             source: article.url,
             pubDate: article.publishedAt,
-            image: article.urlToImage
+            image: article.urlToImage,
+            // Add fields in the format expected by NewsCard
+            id: `newsapi-${index}`,
+            webTitle: article.title,
+            webPublicationDate: article.publishedAt,
+            webUrl: article.url,
+            fields: {
+                thumbnail: article.urlToImage,
+                bodyText: article.description || article.content || "No description available"
+            }
         }));
 
         res.status(200).json({ news });
     } catch (error) {
-        console.error("Error fetching Google News:", error.message);
+        console.error("Error fetching News API:", error.message);
         console.error("Stack trace:", error.stack);
         
         // Check if error is from axios
@@ -63,7 +73,7 @@ export default async function handler(req, res) {
         const errorMessage = error.response?.data?.message || error.message || "Unknown error";
         
         res.status(statusCode).json({ 
-            error: "Failed to fetch Google News", 
+            error: "Failed to fetch News API", 
             message: errorMessage,
             stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
         });

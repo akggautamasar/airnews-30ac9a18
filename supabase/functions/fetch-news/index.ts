@@ -1,11 +1,10 @@
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const GUARDIAN_API_KEY = Deno.env.get('GUARDIAN_API_KEY');
 const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY');
 const THE_NEWS_API_KEY = Deno.env.get('THE_NEWS_API_KEY');
 const NEWSDATA_IO_API_KEY = Deno.env.get('NEWSDATA_IO_API_KEY');
-const MEDIASTACK_API_KEY = Deno.env.get('MEDIASTACK_API_KEY');
+const GNEWS_API_KEY = Deno.env.get('GNEWS_API_KEY');
 const WORLDNEWS_API_KEY = Deno.env.get('WORLDNEWS_API_KEY');
 const PIXABAY_API_KEY = Deno.env.get('PIXABAY_API_KEY');
 const PEXELS_API_KEY = Deno.env.get('PEXELS_API_KEY');
@@ -79,7 +78,8 @@ serve(async (req) => {
       const params = new URLSearchParams({
         'apiKey': NEWS_API_KEY || '',
         'pageSize': '10',
-        'language': 'en'
+        'language': 'en',
+        'country': 'us'
       });
       
       // Only add category if we have a specific one
@@ -116,7 +116,6 @@ serve(async (req) => {
         }
       };
     } else if (newsAgency === 'thenewsapi') {
-      // The News API integration
       const baseUrl = 'https://api.thenewsapi.com/v1/news/top';
       
       // Map category for The News API
@@ -164,106 +163,49 @@ serve(async (req) => {
           }))
         }
       };
-    } else if (newsAgency === 'newsdataio') {
-      // NewsData.io API integration
-      const baseUrl = 'https://newsdata.io/api/1/news';
+    } else if (newsAgency === 'gnews') {
+      const baseUrl = 'https://gnews.io/api/v4/top-headlines';
       
-      // Map category for NewsData.io
-      let newsCategory = '';
-      if (category && category !== "Today's News" && category !== "Top Stories") {
-        newsCategory = mapCategoryForNewsDataIO(category);
-      }
+      // Map category for GNews
+      let newsCategory = mapCategoryForGNews(category);
       
       const params = new URLSearchParams({
-        'apikey': NEWSDATA_IO_API_KEY || '',
-        'language': 'en',
-        'size': '10'
+        'apikey': GNEWS_API_KEY || '',
+        'lang': 'en',
+        'country': 'us',
+        'max': '10',
+        'category': newsCategory
       });
-      
-      // Add category if specific
-      if (newsCategory) {
-        params.append('category', newsCategory);
-      }
 
-      console.log('Fetching from NewsData.io API:', `${baseUrl}?${params}`);
+      console.log('Fetching from GNews API:', `${baseUrl}?${params}`);
       
       const response = await fetch(`${baseUrl}?${params}`);
       const data = await response.json();
       
-      if (data.status !== 'success') {
-        throw new Error(`NewsData.io API error: ${data.results?.message || 'Unknown error'}`);
+      if (!response.ok) {
+        throw new Error(`GNews API error: ${data.errors || response.statusText}`);
       }
       
-      // Transform NewsData.io API response to match Guardian API format
+      // Transform GNews API response to match Guardian API format
       apiResponse = {
         response: {
-          results: data.results.map((article: any, index: number) => ({
-            id: `newsdataio-${index}`,
+          results: data.articles.map((article: any, index: number) => ({
+            id: `gnews-${index}`,
             type: 'article',
             sectionId: newsCategory || 'general',
             sectionName: category,
-            webPublicationDate: article.pubDate,
-            webTitle: article.title,
-            webUrl: article.link,
-            apiUrl: article.link,
-            fields: {
-              thumbnail: article.image_url,
-              bodyText: article.description || article.content || 'No description available'
-            }
-          }))
-        }
-      };
-    } else if (newsAgency === 'mediastack') {
-      // Mediastack API integration
-      const baseUrl = 'http://api.mediastack.com/v1/news';
-      
-      // Map category for Mediastack
-      let newsCategory = '';
-      if (category && category !== "Today's News" && category !== "Top Stories") {
-        newsCategory = category.toLowerCase();
-      }
-      
-      const params = new URLSearchParams({
-        'access_key': MEDIASTACK_API_KEY || '',
-        'limit': '10',
-        'languages': 'en'
-      });
-      
-      // Add category if specific
-      if (newsCategory) {
-        params.append('categories', newsCategory);
-      }
-
-      console.log('Fetching from Mediastack API:', `${baseUrl}?${params}`);
-      
-      const response = await fetch(`${baseUrl}?${params}`);
-      const data = await response.json();
-      
-      if (data.error) {
-        throw new Error(`Mediastack API error: ${data.error.info || 'Unknown error'}`);
-      }
-      
-      // Transform Mediastack API response to match Guardian API format
-      apiResponse = {
-        response: {
-          results: data.data.map((article: any, index: number) => ({
-            id: `mediastack-${index}`,
-            type: 'article',
-            sectionId: article.category || 'general',
-            sectionName: article.category ? capitalizeFirstLetter(article.category) : 'General',
-            webPublicationDate: article.published_at,
+            webPublicationDate: article.publishedAt,
             webTitle: article.title,
             webUrl: article.url,
             apiUrl: article.url,
             fields: {
               thumbnail: article.image,
-              bodyText: article.description || 'No description available'
+              bodyText: article.description || article.content || 'No description available'
             }
           }))
         }
       };
     } else if (newsAgency === 'worldnewsapi') {
-      // World News API integration
       const baseUrl = 'https://api.worldnewsapi.com/search-news';
       
       const params = new URLSearchParams({
@@ -329,8 +271,24 @@ serve(async (req) => {
 });
 
 // Helper functions
+function mapCategoryForGNews(category: string): string {
+  const categoryMap: Record<string, string> = {
+    "Today's News": "general",
+    "Top Stories": "general",
+    "Technology": "technology",
+    "Business": "business",
+    "Entertainment": "entertainment",
+    "Sports": "sports",
+    "World": "world",
+    "Science": "science",
+    "Health": "health"
+  };
+
+  const lowerCategory = category.toLowerCase().replace("'s", "").trim();
+  return categoryMap[category] || "general";
+}
+
 function mapCategoryForNewsDataIO(category: string): string {
-  // Map standard categories to NewsData.io categories
   const categoryMap: Record<string, string> = {
     'technology': 'technology',
     'business': 'business',
