@@ -9,6 +9,7 @@ import { AdvertisementSection } from "@/components/AdvertisementSection";
 import { EventsSection } from "@/components/EventsSection";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { GoogleNewsSection } from "@/components/GoogleNewsSection";
+import { GNewsSection } from "@/components/GNewsSection";
 import { useSearchParams } from "react-router-dom";
 
 const categories = [
@@ -29,6 +30,7 @@ const newsAgencies = [
   { id: 'custom', name: 'The News API' },
   { id: 'google', name: 'Google News' },
   { id: 'google-rss', name: 'Google News RSS' },
+  { id: 'gnews', name: 'GNews API' },
   { id: 'ai', name: 'AI Generated' }
 ];
 
@@ -45,6 +47,10 @@ export default function Index() {
     if (value === 'google-rss') {
       setSearchParams({ feed: 'rss' });
       toast.success("Using Google News RSS Feed");
+    } else if (value === 'gnews') {
+      toast.success("Using GNews API");
+      searchParams.delete('feed');
+      setSearchParams(searchParams);
     } else {
       // Remove feed parameter if it exists
       searchParams.delete('feed');
@@ -100,6 +106,8 @@ export default function Index() {
           {activeTab === 'standard' ? (
             selectedNewsAgency === 'google' || selectedNewsAgency === 'google-rss' ? (
               <GoogleNewsSection />
+            ) : selectedNewsAgency === 'gnews' ? (
+              <GNewsSection selectedCategory={selectedCategory} />
             ) : (
               <NewsSection 
                 selectedCategory={selectedCategory}
