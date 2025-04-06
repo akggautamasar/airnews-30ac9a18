@@ -28,6 +28,7 @@ const newsAgencies = [
   { id: 'guardian', name: 'The Guardian' },
   { id: 'newsapi', name: 'News API' },
   { id: 'custom', name: 'The News API' },
+  { id: 'mediastack', name: 'Mediastack' },
   { id: 'google', name: 'Google News' },
   { id: 'google-rss', name: 'Google News RSS' },
   { id: 'gnews', name: 'GNews API' },

@@ -1,7 +1,12 @@
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const GUARDIAN_API_KEY = Deno.env.get('GUARDIAN_API_KEY');
 const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY');
+const THE_NEWS_API_KEY = Deno.env.get('THE_NEWS_API_KEY');
+const NEWSDATA_IO_API_KEY = Deno.env.get('NEWSDATA_IO_API_KEY');
+const MEDIASTACK_API_KEY = Deno.env.get('MEDIASTACK_API_KEY');
+const WORLDNEWS_API_KEY = Deno.env.get('WORLDNEWS_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -96,6 +101,88 @@ serve(async (req) => {
           }))
         }
       };
+    } else if (newsAgency === 'custom') {
+      // The News API integration
+      const baseUrl = 'https://api.thenewsapi.com/v1/news/top';
+      const params = new URLSearchParams({
+        'api_token': THE_NEWS_API_KEY || '',
+        'limit': '10',
+      });
+      
+      if (category && category !== "Today's News" && category !== "Top Stories") {
+        params.append('categories', category.toLowerCase());
+      }
+
+      console.log('Fetching from The News API:', `${baseUrl}?${params}`);
+      
+      const response = await fetch(`${baseUrl}?${params}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(`The News API error: ${data.message || response.statusText}`);
+      }
+      
+      // Transform The News API response to match Guardian API format
+      apiResponse = {
+        response: {
+          results: data.data.map((article: any, index: number) => ({
+            id: `thenewsapi-${index}`,
+            type: 'article',
+            sectionId: category.toLowerCase(),
+            sectionName: category,
+            webPublicationDate: article.published_at,
+            webTitle: article.title,
+            webUrl: article.url,
+            apiUrl: article.url,
+            fields: {
+              thumbnail: article.image_url,
+              bodyText: article.description || article.snippet
+            }
+          }))
+        }
+      };
+    } else if (newsAgency === 'mediastack') {
+      // Mediastack API integration
+      const baseUrl = 'http://api.mediastack.com/v1/news';
+      const params = new URLSearchParams({
+        'access_key': MEDIASTACK_API_KEY || '',
+        'limit': '10',
+      });
+      
+      if (category && category !== "Today's News" && category !== "Top Stories") {
+        params.append('categories', category.toLowerCase());
+      }
+
+      console.log('Fetching from Mediastack API:', `${baseUrl}?${params}`);
+      
+      const response = await fetch(`${baseUrl}?${params}`);
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(`Mediastack API error: ${data.error?.info || response.statusText}`);
+      }
+      
+      // Transform Mediastack API response to match Guardian API format
+      apiResponse = {
+        response: {
+          results: data.data.map((article: any, index: number) => ({
+            id: `mediastack-${index}`,
+            type: 'article',
+            sectionId: article.category || '',
+            sectionName: article.category ? article.category.charAt(0).toUpperCase() + article.category.slice(1) : '',
+            webPublicationDate: article.published_at,
+            webTitle: article.title,
+            webUrl: article.url,
+            apiUrl: article.url,
+            fields: {
+              thumbnail: article.image,
+              bodyText: article.description
+            }
+          }))
+        }
+      };
+    } else {
+      throw new Error(`Unsupported news agency: ${newsAgency}`);
     }
 
     return new Response(JSON.stringify(apiResponse), {
