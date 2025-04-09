@@ -1,10 +1,11 @@
+
 import {
   BrowserRouter,
   Routes,
   Route,
 } from "react-router-dom";
-import { Layout } from "@/pages/Layout";
-import { Index } from "@/pages/Index";
+import { Layout } from "@/components/Layout";
+import Index from "@/pages/Index";
 import Admin from "@/pages/Admin";
 import Auth from "@/pages/Auth";
 import MobileLockscreen from "@/pages/MobileLockscreen";
