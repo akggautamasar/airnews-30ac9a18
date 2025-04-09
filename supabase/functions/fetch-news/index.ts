@@ -14,12 +14,16 @@ serve(async (req) => {
   }
 
   try {
-    const { category, isToday, newsAgency } = await req.json();
-    let apiResponse;
+    // Parse request body
+    const requestData = await req.json();
+    const { category = '', isToday = false, newsAgency = 'guardian' } = requestData;
 
     console.log('Received request with params:', { category, isToday, newsAgency });
 
+    let apiResponse;
+
     try {
+      // Select news provider based on newsAgency parameter
       switch (newsAgency) {
         case 'guardian':
           apiResponse = await fetchGuardianNews(category, isToday);
@@ -45,13 +49,28 @@ serve(async (req) => {
       
       return new Response(JSON.stringify(apiResponse), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200
       });
     } catch (error) {
-      // Capture specific provider errors
+      // Capture specific provider errors and enhance the error message
       console.error(`Error fetching from ${newsAgency}:`, error);
-      throw new Error(`Failed to fetch from ${newsAgency}: ${error.message}`);
+      
+      // Create a more detailed error response
+      return new Response(
+        JSON.stringify({ 
+          error: `Failed to fetch from ${newsAgency}`,
+          message: error.message,
+          category: category,
+          provider: newsAgency
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
     }
   } catch (error) {
+    // Handle general API errors (like JSON parsing)
     console.error('Error in fetch-news function:', error);
     
     return new Response(

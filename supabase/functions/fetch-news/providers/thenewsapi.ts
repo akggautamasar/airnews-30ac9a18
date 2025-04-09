@@ -1,35 +1,36 @@
 
 import { corsHeaders } from "../../_shared/cors.ts";
-import { validateApiKey } from "../utils.ts";
+import { validateApiKey, transformToStandardFormat } from "../utils.ts";
 
 export async function fetchTheNewsAPI(category: string) {
+  // Get API key from environment variables
   const THE_NEWS_API_KEY = Deno.env.get('THE_NEWS_API_KEY');
   
-  // Validate API key
-  validateApiKey(THE_NEWS_API_KEY, 'The News API');
-  
-  const baseUrl = 'https://api.thenewsapi.com/v1/news/top';
-  
-  // Map category for The News API
-  let newsCategory = '';
-  if (category && category !== "Today's News" && category !== "Top Stories") {
-    newsCategory = category.toLowerCase();
-  }
-  
-  const params = new URLSearchParams({
-    'api_token': THE_NEWS_API_KEY,
-    'limit': '10',
-    'language': 'en'
-  });
-  
-  // Add category if specific
-  if (newsCategory) {
-    params.append('categories', newsCategory);
-  }
-
-  console.log('Fetching from The News API:', `${baseUrl}?${params.toString()}`);
-  
   try {
+    // Validate API key
+    const apiKey = validateApiKey(THE_NEWS_API_KEY, 'The News API');
+    
+    const baseUrl = 'https://api.thenewsapi.com/v1/news/top';
+    
+    // Map category for The News API
+    let newsCategory = '';
+    if (category && category !== "Today's News" && category !== "Top Stories") {
+      newsCategory = category.toLowerCase();
+    }
+    
+    const params = new URLSearchParams({
+      'api_token': apiKey,
+      'limit': '10',
+      'language': 'en'
+    });
+    
+    // Add category if specific
+    if (newsCategory) {
+      params.append('categories', newsCategory);
+    }
+
+    console.log('Fetching from The News API:', `${baseUrl}?${params.toString()}`);
+    
     const response = await fetch(`${baseUrl}?${params.toString()}`, {
       headers: {
         'Content-Type': 'application/json',
@@ -46,27 +47,17 @@ export async function fetchTheNewsAPI(category: string) {
     
     if (!data.data || data.data.length === 0) {
       console.warn('No articles returned from The News API');
+      return transformToStandardFormat([], 'thenewsapi', category);
     }
     
-    // Transform The News API response to match Guardian API format
-    return {
-      response: {
-        results: (data.data || []).map((article: any, index: number) => ({
-          id: `thenewsapi-${index}`,
-          type: 'article',
-          sectionId: newsCategory || 'general',
-          sectionName: category,
-          webPublicationDate: article.published_at,
-          webTitle: article.title,
-          webUrl: article.url,
-          apiUrl: article.url,
-          fields: {
-            thumbnail: article.image_url,
-            bodyText: article.description || article.snippet || 'No description available'
-          }
-        }))
-      }
-    };
+    // Use our standard transform function
+    return transformToStandardFormat(data.data.map((article: any) => ({
+      title: article.title,
+      published_at: article.published_at,
+      url: article.url,
+      description: article.description || article.snippet || 'No description available',
+      image: article.image_url
+    })), 'thenewsapi', category);
   } catch (error) {
     console.error('Error fetching from The News API:', error);
     throw error;

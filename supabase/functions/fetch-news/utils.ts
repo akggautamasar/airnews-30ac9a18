@@ -38,10 +38,42 @@ export function capitalizeFirstLetter(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-// Check if the API key is defined and throw a useful error if not
+// Enhanced API key validation with more helpful error messages
 export function validateApiKey(apiKey: string | undefined, apiName: string): string {
   if (!apiKey) {
+    console.error(`${apiName} API key is missing from environment variables`);
     throw new Error(`${apiName} API key is not defined. Please check your environment variables.`);
   }
+  
+  // Check if the API key is empty or looks suspiciously invalid
+  if (apiKey.trim() === '' || apiKey.length < 5) {
+    console.error(`${apiName} API key appears to be invalid: ${apiKey}`);
+    throw new Error(`${apiName} API key appears to be invalid. Please check your environment variables.`);
+  }
+  
+  console.log(`${apiName} API key validation passed`);
   return apiKey;
+}
+
+// Helper function to transform API responses to a standardized format
+export function transformToStandardFormat(articles: any[], source: string, category: string): any {
+  return {
+    response: {
+      status: 'ok',
+      results: articles.map((article: any, index: number) => ({
+        id: `${source}-${index}`,
+        type: 'article',
+        sectionId: category.toLowerCase() || 'general',
+        sectionName: category,
+        webPublicationDate: article.publishedAt || article.published_at || article.date || new Date().toISOString(),
+        webTitle: article.title || article.headline || 'No title available',
+        webUrl: article.url || article.link || article.source || '#',
+        apiUrl: article.url || article.link || article.source || '#',
+        fields: {
+          thumbnail: article.image || article.urlToImage || article.image_url || article.thumbnail,
+          bodyText: article.description || article.content || article.summary || article.snippet || 'No description available'
+        }
+      }))
+    }
+  };
 }
