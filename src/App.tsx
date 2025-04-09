@@ -3,6 +3,7 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Outlet
 } from "react-router-dom";
 import { Layout } from "@/components/Layout";
 import Index from "@/pages/Index";
@@ -16,7 +17,7 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Layout />}>
+        <Route path="/" element={<Layout><Outlet /></Layout>}>
           <Route index element={<Index />} />
           <Route path="admin" element={<Admin />} />
           <Route path="admin/api-keys" element={<ApiKeys />} />
