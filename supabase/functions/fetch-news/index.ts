@@ -19,29 +19,38 @@ serve(async (req) => {
 
     console.log('Received request with params:', { category, isToday, newsAgency });
 
-    switch (newsAgency) {
-      case 'guardian':
-        apiResponse = await fetchGuardianNews(category, isToday);
-        break;
-      case 'newsapi':
-        apiResponse = await fetchNewsAPI(category);
-        break;
-      case 'thenewsapi':
-        apiResponse = await fetchTheNewsAPI(category);
-        break;
-      case 'gnews':
-        apiResponse = await fetchGNews(category);
-        break;
-      case 'worldnewsapi':
-        apiResponse = await fetchWorldNewsAPI(category);
-        break;
-      default:
-        throw new Error(`Unsupported news agency: ${newsAgency}`);
-    }
+    try {
+      switch (newsAgency) {
+        case 'guardian':
+          apiResponse = await fetchGuardianNews(category, isToday);
+          break;
+        case 'newsapi':
+          apiResponse = await fetchNewsAPI(category);
+          break;
+        case 'thenewsapi':
+          apiResponse = await fetchTheNewsAPI(category);
+          break;
+        case 'gnews':
+          apiResponse = await fetchGNews(category);
+          break;
+        case 'worldnewsapi':
+          apiResponse = await fetchWorldNewsAPI(category);
+          break;
+        default:
+          throw new Error(`Unsupported news agency: ${newsAgency}`);
+      }
 
-    return new Response(JSON.stringify(apiResponse), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+      // If we successfully get here, log the success
+      console.log(`Successfully fetched news from ${newsAgency} for category ${category}`);
+      
+      return new Response(JSON.stringify(apiResponse), {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    } catch (error) {
+      // Capture specific provider errors
+      console.error(`Error fetching from ${newsAgency}:`, error);
+      throw new Error(`Failed to fetch from ${newsAgency}: ${error.message}`);
+    }
   } catch (error) {
     console.error('Error in fetch-news function:', error);
     

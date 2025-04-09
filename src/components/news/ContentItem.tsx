@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { NewsCard } from "@/components/NewsCard";
 import { Card, CardContent } from "@/components/ui/card";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface ContentItemProps {
   item: {
@@ -20,26 +21,32 @@ export const ContentItem = ({ item, category }: ContentItemProps) => {
     if (item.type === 'news' && !item.content.fields?.thumbnail && !item.content.image) {
       // Get article title or use category as fallback
       const searchTerm = item.content.webTitle || category;
-      
-      // Randomly select one of the image APIs
-      const imageApis = ['pixabay', 'pexels'];
-      const selectedApi = imageApis[Math.floor(Math.random() * imageApis.length)];
-      
       const fetchImage = async () => {
         try {
-          let apiUrl = '';
+          // Randomly select one of the image APIs
+          const imageSources = ['pixabay', 'pexels'];
+          const selectedSource = imageSources[Math.floor(Math.random() * imageSources.length)];
           
-          if (selectedApi === 'pixabay') {
-            apiUrl = `/api/image-search?source=pixabay&query=${encodeURIComponent(searchTerm)}`;
-          } else if (selectedApi === 'pexels') {
-            apiUrl = `/api/image-search?source=pexels&query=${encodeURIComponent(searchTerm)}`;
+          console.log(`Fetching image for "${searchTerm}" from ${selectedSource}`);
+          
+          // Use the Supabase Edge Function instead of a direct API call
+          const response = await supabase.functions.invoke('image-search', {
+            body: { 
+              source: selectedSource,
+              query: searchTerm
+            },
+          });
+          
+          if (response.error) {
+            console.error('Error fetching image:', response.error);
+            return;
           }
           
-          const response = await fetch(apiUrl);
-          const data = await response.json();
-          
-          if (data.imageUrl) {
-            setImageUrl(data.imageUrl);
+          if (response.data?.imageUrl) {
+            console.log(`Found image for "${searchTerm}":`, response.data.imageUrl);
+            setImageUrl(response.data.imageUrl);
+          } else {
+            console.log(`No image found for "${searchTerm}"`);
           }
         } catch (error) {
           console.error('Error fetching alternative image:', error);

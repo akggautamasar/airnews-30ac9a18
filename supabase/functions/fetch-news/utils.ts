@@ -1,8 +1,8 @@
 
 export function mapCategoryForGNews(category: string): string {
   const categoryMap: Record<string, string> = {
-    "Today's News": "general",
-    "Top Stories": "general",
+    "Today's News": "breaking-news",
+    "Top Stories": "breaking-news",
     "Technology": "technology",
     "Business": "business",
     "Entertainment": "entertainment",
@@ -12,7 +12,7 @@ export function mapCategoryForGNews(category: string): string {
     "Health": "health"
   };
 
-  return categoryMap[category] || "general";
+  return categoryMap[category] || "breaking-news";
 }
 
 export function mapCategoryForNewsDataIO(category: string): string {
@@ -36,4 +36,12 @@ export function mapCategoryForNewsDataIO(category: string): string {
 
 export function capitalizeFirstLetter(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
+// Check if the API key is defined and throw a useful error if not
+export function validateApiKey(apiKey: string | undefined, apiName: string): string {
+  if (!apiKey) {
+    throw new Error(`${apiName} API key is not defined. Please check your environment variables.`);
+  }
+  return apiKey;
 }

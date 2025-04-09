@@ -12,3 +12,9 @@ port = 54322
 [studio]
 enabled = true
 port = 54323
+
+[functions.fetch-news]
+verify_jwt = false
+
+[functions.image-search]
+verify_jwt = false

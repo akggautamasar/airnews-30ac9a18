@@ -1,12 +1,12 @@
 
 import { corsHeaders } from "../../_shared/cors.ts";
+import { validateApiKey } from "../utils.ts";
 
 export async function fetchNewsAPI(category: string) {
   const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY');
   
-  if (!NEWS_API_KEY) {
-    throw new Error('News API key is not defined');
-  }
+  // Validate API key
+  validateApiKey(NEWS_API_KEY, 'News API');
   
   const baseUrl = 'https://newsapi.org/v2/top-headlines';
   
@@ -28,32 +28,48 @@ export async function fetchNewsAPI(category: string) {
     params.append('category', newsCategory);
   }
 
-  console.log('Fetching from News API:', `${baseUrl}?${params}`);
+  console.log('Fetching from News API:', `${baseUrl}?${params.toString()}`);
   
-  const response = await fetch(`${baseUrl}?${params}`);
-  const data = await response.json();
-  
-  if (!response.ok) {
-    throw new Error(`News API error: ${data.message || response.statusText}`);
-  }
-  
-  // Transform News API response to match Guardian API format
-  return {
-    response: {
-      results: data.articles.map((article: any, index: number) => ({
-        id: `newsapi-${index}`,
-        type: 'article',
-        sectionId: newsCategory || 'general',
-        sectionName: category,
-        webPublicationDate: article.publishedAt,
-        webTitle: article.title,
-        webUrl: article.url,
-        apiUrl: article.url,
-        fields: {
-          thumbnail: article.urlToImage,
-          bodyText: article.description || article.content || 'No description available'
-        }
-      }))
+  try {
+    const response = await fetch(`${baseUrl}?${params.toString()}`, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('News API error response:', errorText);
+      throw new Error(`News API error: ${response.status} ${response.statusText}`);
     }
-  };
+    
+    const data = await response.json();
+    
+    if (!data.articles || data.articles.length === 0) {
+      console.warn('No articles returned from News API');
+    }
+    
+    // Transform News API response to match Guardian API format
+    return {
+      response: {
+        results: (data.articles || []).map((article: any, index: number) => ({
+          id: `newsapi-${index}`,
+          type: 'article',
+          sectionId: newsCategory || 'general',
+          sectionName: category,
+          webPublicationDate: article.publishedAt,
+          webTitle: article.title,
+          webUrl: article.url,
+          apiUrl: article.url,
+          fields: {
+            thumbnail: article.urlToImage,
+            bodyText: article.description || article.content || 'No description available'
+          }
+        }))
+      }
+    };
+  } catch (error) {
+    console.error('Error fetching from News API:', error);
+    throw error;
+  }
 }
