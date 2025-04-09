@@ -4,9 +4,10 @@ import { NewsCard } from "@/components/NewsCard";
 import { LoadingState, ErrorState } from "@/components/news/NewsStateHandlers";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, AlertCircle, Settings } from "lucide-react";
+import { Link } from "react-router-dom";
 
 interface GNewsSectionProps {
   selectedCategory: string;
@@ -16,12 +17,14 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
   const [news, setNews] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [apiKeyError, setApiKeyError] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
 
   const fetchNews = async () => {
     setIsLoading(true);
     setError(null);
+    setApiKeyError(false);
     
     try {
       console.log("Fetching GNews for category:", selectedCategory);
@@ -39,6 +42,12 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
       
       if (response.error) {
         console.error("GNews API error:", response.error);
+        
+        // Check if this is an API key configuration error
+        if (response.error.message && response.error.message.includes('API key')) {
+          setApiKeyError(true);
+        }
+        
         throw new Error(response.error.message || "Failed to fetch news");
       }
       
@@ -91,18 +100,38 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
     return (
       <div className="h-full flex flex-col items-center justify-center">
         <ErrorState error={error} />
-        <Button 
-          onClick={handleRetry} 
-          variant="outline" 
-          className="mt-4 flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" /> Try Again
-        </Button>
-        <Alert className="mt-4 max-w-lg">
-          <AlertDescription>
-            You may need to add or update your GNews API key in Supabase secrets.
-          </AlertDescription>
-        </Alert>
+        
+        <div className="flex flex-col gap-4 items-center mt-6">
+          <Button 
+            onClick={handleRetry} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> Try Again
+          </Button>
+          
+          {apiKeyError && (
+            <Link to="/admin/api-keys">
+              <Button className="flex items-center gap-2">
+                <Settings className="h-4 w-4" /> Configure API Keys
+              </Button>
+            </Link>
+          )}
+        </div>
+        
+        {apiKeyError && (
+          <Alert className="mt-6 max-w-lg" variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>API Key Required</AlertTitle>
+            <AlertDescription>
+              You need to add your GNews API key in the API Keys management page.
+              <ul className="list-disc pl-5 mt-2">
+                <li>Get a free API key from <a href="https://gnews.io/" target="_blank" rel="noopener noreferrer" className="text-primary underline">GNews.io</a></li>
+                <li>Add it in the <Link to="/admin/api-keys" className="text-primary underline">API Keys management page</Link></li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
       </div>
     );
   }
@@ -111,13 +140,21 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
     return (
       <div className="flex flex-col items-center justify-center h-full">
         <p className="text-gray-500 mb-4">No news found for this category.</p>
-        <Button 
-          onClick={handleRetry} 
-          variant="outline" 
-          className="flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" /> Try Again
-        </Button>
+        <div className="flex gap-4">
+          <Button 
+            onClick={handleRetry} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> Try Again
+          </Button>
+          
+          <Link to="/admin/api-keys">
+            <Button variant="outline" className="flex items-center gap-2">
+              <Settings className="h-4 w-4" /> Manage API Keys
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

@@ -1,11 +1,13 @@
 
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EventForm } from "@/components/admin/EventForm";
 import { AdvertisementForm } from "@/components/admin/AdvertisementForm";
 import { useQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 
 export default function Admin() {
   const navigate = useNavigate();
@@ -42,7 +44,15 @@ export default function Admin() {
 
   return (
     <div className="container mx-auto p-8">
-      <h1 className="text-3xl font-bold mb-8">Admin Dashboard</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+        <Link to="/admin/api-keys">
+          <Button variant="outline" className="flex items-center gap-2">
+            <Settings size={16} />
+            Manage API Keys
+          </Button>
+        </Link>
+      </div>
       
       <Tabs defaultValue="advertisements" className="w-full">
         <TabsList className="mb-8">

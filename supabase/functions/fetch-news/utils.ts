@@ -41,8 +41,15 @@ export function capitalizeFirstLetter(string: string): string {
 // Enhanced API key validation with more helpful error messages
 export function validateApiKey(apiKey: string | undefined, apiName: string): string {
   if (!apiKey) {
+    // List all available environment variables for debugging
+    const availableEnvVars = Object.keys(Deno.env.toObject())
+      .filter(key => key.includes('API_KEY'))
+      .join(', ');
+    
     console.error(`${apiName} API key is missing from environment variables`);
-    throw new Error(`${apiName} API key is not defined. Please check your environment variables.`);
+    console.error(`Available API keys: ${availableEnvVars || 'None'}`);
+    
+    throw new Error(`${apiName} API key is not defined. Please check your environment variables or add it in the API Keys management page.`);
   }
   
   // Check if the API key is empty or looks suspiciously invalid

@@ -20,6 +20,25 @@ serve(async (req) => {
 
     console.log('Received request with params:', { category, isToday, newsAgency });
 
+    // Verify we have the required API key for the requested news agency
+    const apiKeyName = `${newsAgency.toUpperCase().replace(/\s/g, '_')}_API_KEY`;
+    const apiKey = Deno.env.get(apiKeyName) || Deno.env.get(newsAgency.toUpperCase());
+    
+    if (!apiKey && newsAgency !== 'guardian') {
+      console.error(`No API key found for ${newsAgency} (looking for ${apiKeyName})`);
+      return new Response(
+        JSON.stringify({
+          error: `API key not configured for ${newsAgency}`,
+          message: `Please configure the ${apiKeyName} secret in your Supabase project`,
+          availableKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('API_KEY'))
+        }),
+        {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     let apiResponse;
 
     try {
@@ -61,7 +80,8 @@ serve(async (req) => {
           error: `Failed to fetch from ${newsAgency}`,
           message: error.message,
           category: category,
-          provider: newsAgency
+          provider: newsAgency,
+          availableKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('API_KEY'))
         }),
         {
           status: 500,
@@ -76,7 +96,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         error: error.message || 'Internal server error',
-        details: error.stack
+        details: error.stack,
+        availableKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('API_KEY'))
       }),
       {
         status: 500,

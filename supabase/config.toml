@@ -21,3 +21,6 @@ verify_jwt = false
 
 [functions.fetch-ai-news]
 verify_jwt = false
+
+[functions.update-api-keys]
+verify_jwt = false
