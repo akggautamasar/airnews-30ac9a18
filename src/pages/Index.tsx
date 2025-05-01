@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { CategoryNav } from "@/components/CategoryNav";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -62,12 +61,15 @@ export default function Index() {
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
-    toast.info(`Switched to ${value === 'standard' ? 'Standard News' : 'AI Curated News'}`);
+    toast.info(`Switched to ${value === 'standard' ? 'Standard News' : 'AI Curated News'}`); // Corrected line
   };
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <AdvertisementSection />
+      <div className="flex flex-col md:flex-row gap-8">
+        <AdvertisementSection />
+        <EventsSection />
+      </div>
       
       <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-6">
         <TabsList className="w-full">
@@ -102,7 +104,6 @@ export default function Index() {
               />
             </>
           )}
-          <EventsSection />
         </aside>
         <main className="md:w-3/4 h-[calc(100vh-8rem)]">
           {activeTab === 'standard' ? (
