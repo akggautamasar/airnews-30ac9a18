@@ -27,7 +27,7 @@ serve(async (req) => {
       );
     }
 
-    // Validate key names for security
+    // Validate key names for security - Updated to match only the ones we want
     const allowedKeys = [
       "GUARDIAN_API_KEY",
       "NEWS_API_KEY",

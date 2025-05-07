@@ -29,9 +29,10 @@ const newsAgencies = [
   { id: 'newsapi', name: 'News API' },
   { id: 'thenewsapi', name: 'The News API' },
   { id: 'gnews', name: 'GNews API' },
+  { id: 'worldnewsapi', name: 'World News API' },
+  { id: 'newsdata_io', name: 'NewsData.io' },
   { id: 'google', name: 'Google News' },
   { id: 'google-rss', name: 'Google News RSS' },
-  { id: 'worldnewsapi', name: 'World News API' },
   { id: 'ai', name: 'AI Generated' }
 ];
 
