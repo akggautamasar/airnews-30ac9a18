@@ -36,14 +36,16 @@ export const useNewsContent = (selectedCategory: string, selectedNewsAgency: str
 
         // Check if the response contains an error status from the API
         if (response.data?.response?.status === 'error') {
-          console.error('Error in news API:', response.data.response.error);
-          throw new Error(response.data.response.error || 'Failed to fetch news');
+          const errorMessage = response.data.response.error || 'Failed to fetch news';
+          const errorSource = response.data.response.errorSource || selectedNewsAgency;
+          console.error(`Error in news API (${errorSource}):`, errorMessage);
+          throw new Error(errorMessage);
         }
 
         // Check if we have any results
         if (!response.data?.response?.results || response.data.response.results.length === 0) {
           console.warn('No news results returned');
-          toast.info(`No news found for ${selectedCategory}`);
+          toast.info(`No news found for ${selectedCategory} from ${selectedNewsAgency}`);
         }
 
         return response.data;
@@ -61,6 +63,7 @@ export const useNewsContent = (selectedCategory: string, selectedNewsAgency: str
     queryKey: ['active-advertisements', refreshKey],
     queryFn: async () => {
       try {
+        console.log('Fetching advertisements...');
         const { data, error } = await supabase
           .from('advertisements')
           .select('*')
@@ -68,6 +71,7 @@ export const useNewsContent = (selectedCategory: string, selectedNewsAgency: str
           .order('created_at', { ascending: false });
         
         if (error) throw error;
+        console.log('Advertisements fetched:', data);
         return data || [];
       } catch (error) {
         console.error('Error fetching advertisements:', error);

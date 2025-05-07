@@ -43,21 +43,31 @@ export async function fetchGuardianNews(category: string, isToday: boolean) {
     const response = await fetch(url);
     
     if (!response.ok) {
-      const errorText = await response.text();
-      let errorData;
-      
+      let errorText;
       try {
-        errorData = JSON.parse(errorText);
-      } catch (e) {
-        errorData = { message: errorText || response.statusText };
-      }
-      
-      console.error('Guardian API error response:', errorData);
-      
-      if (response.status === 401 || response.status === 403) {
-        throw new Error(`Guardian API key is invalid or unauthorized. Please check your API key.`);
-      } else {
-        throw new Error(`Guardian API error: ${errorData.message || response.statusText}`);
+        errorText = await response.text();
+        let errorData;
+        
+        try {
+          errorData = JSON.parse(errorText);
+        } catch (e) {
+          errorData = { message: errorText || response.statusText };
+        }
+        
+        console.error('Guardian API error response:', errorData);
+        
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`Guardian API key is invalid or unauthorized. Please check your API key.`);
+        } else {
+          throw new Error(`Guardian API error: ${errorData.message || response.statusText}`);
+        }
+      } catch (parseError) {
+        console.error('Error parsing Guardian API response:', parseError);
+        if (response.status === 401 || response.status === 403) {
+          throw new Error(`Guardian API key is invalid or unauthorized. Please check your API key.`);
+        } else {
+          throw new Error(`Guardian API error: ${response.statusText}`);
+        }
       }
     }
     

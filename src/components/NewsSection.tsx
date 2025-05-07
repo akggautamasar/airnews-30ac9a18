@@ -24,7 +24,8 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     handlePrevious,
     handleNext,
     isNewsLoading,
-    newsError
+    newsError,
+    refetch
   } = useNewsContent(selectedCategory, selectedNewsAgency, refreshKey);
 
   // Function to retry loading news
@@ -39,14 +40,16 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
   if (newsError) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
-        <ErrorState error={newsError} />
-        <Button 
-          onClick={handleRetry} 
-          variant="outline" 
-          className="mt-4 flex items-center gap-2"
-        >
-          <RefreshCw className="h-4 w-4" /> Try Again
-        </Button>
+        <ErrorState error={newsError} onRetry={handleRetry} />
+        <div className="mt-4">
+          <Button 
+            onClick={handleRetry} 
+            variant="outline" 
+            className="flex items-center gap-2"
+          >
+            <RefreshCw className="h-4 w-4" /> Try Again
+          </Button>
+        </div>
       </div>
     );
   }

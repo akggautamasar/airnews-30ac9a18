@@ -23,6 +23,7 @@ serve(async (req) => {
     let apiResponse;
     let statusCode = 200;
     let errorMessage = null;
+    let errorSource = newsAgency;
 
     try {
       // Select news provider based on newsAgency parameter
@@ -48,6 +49,16 @@ serve(async (req) => {
 
       // If we successfully get here, log the success
       console.log(`Successfully fetched news from ${newsAgency} for category ${category}`);
+      
+      // If the response doesn't follow our expected structure, normalize it
+      if (!apiResponse.response) {
+        apiResponse = {
+          response: {
+            status: 'ok',
+            results: Array.isArray(apiResponse) ? apiResponse : []
+          }
+        };
+      }
     } catch (error) {
       // Capture specific provider errors but don't throw
       console.error(`Error fetching from ${newsAgency}:`, error);
@@ -79,7 +90,7 @@ serve(async (req) => {
           status: 'error',
           results: [],
           error: error.message || 'Internal server error',
-          errorDetails: error.stack
+          errorDetails: process.env.NODE_ENV === 'development' ? error.stack : undefined
         }
       }),
       {

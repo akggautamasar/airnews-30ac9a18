@@ -1,5 +1,5 @@
 
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Settings } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -20,9 +20,10 @@ export const LoadingState = ({ isLoading }: LoadingStateProps) => {
 
 interface ErrorStateProps {
   error: Error | null;
+  onRetry?: () => void;
 }
 
-export const ErrorState = ({ error }: ErrorStateProps) => {
+export const ErrorState = ({ error, onRetry }: ErrorStateProps) => {
   if (!error) return null;
   
   const isApiKeyError = error.message && (
@@ -44,16 +45,26 @@ export const ErrorState = ({ error }: ErrorStateProps) => {
             </pre>
           )}
           
-          {isApiKeyError && (
-            <div className="mt-4">
-              <p className="text-sm font-medium mb-2">This appears to be an API key issue.</p>
+          <div className="mt-4 flex flex-col sm:flex-row gap-3">
+            {onRetry && (
+              <Button 
+                onClick={onRetry} 
+                size="sm" 
+                variant="outline" 
+                className="flex items-center gap-2"
+              >
+                <Loader2 className="h-3 w-3" /> Retry
+              </Button>
+            )}
+            
+            {isApiKeyError && (
               <Link to="/admin/api-keys">
-                <Button size="sm" variant="outline">
-                  Go to API Keys Management
+                <Button size="sm" variant="default" className="flex items-center gap-2">
+                  <Settings className="h-3 w-3" /> Configure API Keys
                 </Button>
               </Link>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </AlertDescription>
     </Alert>
