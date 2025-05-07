@@ -29,10 +29,10 @@ type ApiKeyProviderProps = {
   title: string;
   description: string;
   secretName: string;
-  defaultValue?: string;
+  documentationUrl: string;
 };
 
-function ApiKeyProvider({ title, description, secretName }: ApiKeyProviderProps) {
+function ApiKeyProvider({ title, description, secretName, documentationUrl }: ApiKeyProviderProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -94,9 +94,19 @@ function ApiKeyProvider({ title, description, secretName }: ApiKeyProviderProps)
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isSubmitting}>
-              {isSubmitting ? "Saving..." : "Save API Key"}
-            </Button>
+            <div className="flex flex-col space-y-4">
+              <Button type="submit" disabled={isSubmitting}>
+                {isSubmitting ? "Saving..." : "Save API Key"}
+              </Button>
+              <a 
+                href={documentationUrl} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-primary hover:underline text-center text-sm"
+              >
+                Visit {title} website to get an API key
+              </a>
+            </div>
           </form>
         </Form>
       </CardContent>
@@ -105,6 +115,52 @@ function ApiKeyProvider({ title, description, secretName }: ApiKeyProviderProps)
 }
 
 export default function ApiKeysPage() {
+  // Array of supported news providers
+  const newsProviders = [
+    {
+      id: "guardian",
+      title: "Guardian",
+      description: "Get an API key from Guardian by registering at https://open-platform.theguardian.com/",
+      secretName: "GUARDIAN_API_KEY",
+      documentationUrl: "https://open-platform.theguardian.com/"
+    },
+    {
+      id: "newsapi",
+      title: "News API",
+      description: "Get an API key from News API by registering at https://newsapi.org/",
+      secretName: "NEWS_API_KEY",
+      documentationUrl: "https://newsapi.org/"
+    },
+    {
+      id: "thenewsapi",
+      title: "The News API",
+      description: "Get an API key from The News API by registering at https://www.thenewsapi.com/",
+      secretName: "THE_NEWS_API_KEY",
+      documentationUrl: "https://www.thenewsapi.com/"
+    },
+    {
+      id: "gnews",
+      title: "GNews",
+      description: "Get a free API key from GNews by registering at https://gnews.io/",
+      secretName: "GNEWS_API_KEY",
+      documentationUrl: "https://gnews.io/"
+    },
+    {
+      id: "worldnewsapi",
+      title: "World News API",
+      description: "Get an API key from World News API by registering at https://worldnewsapi.com/",
+      secretName: "WORLDNEWS_API_KEY",
+      documentationUrl: "https://worldnewsapi.com/"
+    },
+    {
+      id: "newsdataai",
+      title: "NewsData.io",
+      description: "Get an API key from NewsData.io by registering at https://newsdata.io/",
+      secretName: "NEWSDATA_IO_API_KEY",
+      documentationUrl: "https://newsdata.io/"
+    }
+  ];
+
   return (
     <div className="container mx-auto py-8">
       <h1 className="text-3xl font-bold mb-6">News API Keys Management</h1>
@@ -116,142 +172,23 @@ export default function ApiKeysPage() {
         </AlertDescription>
       </Alert>
       
-      <Tabs defaultValue="gnews" className="w-full">
+      <Tabs defaultValue="guardian" className="w-full">
         <TabsList className="mb-8 flex flex-wrap">
-          <TabsTrigger value="gnews">GNews</TabsTrigger>
-          <TabsTrigger value="worldnews">World News API</TabsTrigger>
-          <TabsTrigger value="newsapi">News API</TabsTrigger>
-          <TabsTrigger value="thenewsapi">The News API</TabsTrigger>
-          <TabsTrigger value="guardian">Guardian</TabsTrigger>
-          <TabsTrigger value="pixabay">Pixabay (Images)</TabsTrigger>
-          <TabsTrigger value="pexels">Pexels (Images)</TabsTrigger>
+          {newsProviders.map(provider => (
+            <TabsTrigger key={provider.id} value={provider.id}>{provider.title}</TabsTrigger>
+          ))}
         </TabsList>
         
-        <TabsContent value="gnews" className="space-y-4">
-          <ApiKeyProvider 
-            title="GNews" 
-            description="Get a free API key from GNews by registering at https://gnews.io/" 
-            secretName="GNEWS_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://gnews.io/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit GNews website to get an API key
-            </a>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="worldnews" className="space-y-4">
-          <ApiKeyProvider 
-            title="World News API" 
-            description="Get an API key from World News API by registering at https://worldnewsapi.com/" 
-            secretName="WORLDNEWS_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://worldnewsapi.com/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit World News API website to get an API key
-            </a>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="newsapi" className="space-y-4">
-          <ApiKeyProvider 
-            title="News API" 
-            description="Get an API key from News API by registering at https://newsapi.org/" 
-            secretName="NEWS_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://newsapi.org/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit News API website to get an API key
-            </a>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="thenewsapi" className="space-y-4">
-          <ApiKeyProvider 
-            title="The News API" 
-            description="Get an API key from The News API by registering at https://www.thenewsapi.com/" 
-            secretName="THE_NEWS_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://www.thenewsapi.com/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit The News API website to get an API key
-            </a>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="guardian" className="space-y-4">
-          <ApiKeyProvider 
-            title="Guardian" 
-            description="Get an API key from Guardian by registering at https://open-platform.theguardian.com/" 
-            secretName="GUARDIAN_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://open-platform.theguardian.com/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit Guardian API website to get an API key
-            </a>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="pixabay" className="space-y-4">
-          <ApiKeyProvider 
-            title="Pixabay" 
-            description="Get an API key from Pixabay by registering at https://pixabay.com/api/docs/" 
-            secretName="PIXABAY_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://pixabay.com/api/docs/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit Pixabay API website to get an API key
-            </a>
-          </div>
-        </TabsContent>
-        
-        <TabsContent value="pexels" className="space-y-4">
-          <ApiKeyProvider 
-            title="Pexels" 
-            description="Get an API key from Pexels by registering at https://www.pexels.com/api/" 
-            secretName="PEXELS_API_KEY" 
-          />
-          <div className="mt-4">
-            <a 
-              href="https://www.pexels.com/api/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="text-primary hover:underline"
-            >
-              Visit Pexels API website to get an API key
-            </a>
-          </div>
-        </TabsContent>
+        {newsProviders.map(provider => (
+          <TabsContent key={provider.id} value={provider.id} className="space-y-4">
+            <ApiKeyProvider 
+              title={provider.title}
+              description={provider.description}
+              secretName={provider.secretName}
+              documentationUrl={provider.documentationUrl}
+            />
+          </TabsContent>
+        ))}
       </Tabs>
     </div>
   );

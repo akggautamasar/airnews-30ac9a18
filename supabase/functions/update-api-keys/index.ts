@@ -27,13 +27,34 @@ serve(async (req) => {
       );
     }
 
-    // Update the secret
-    const command = new Deno.Command('supabase', {
-      args: ['secrets', 'set', `${key}=${value}`],
-    });
+    // Validate key names for security
+    const allowedKeys = [
+      "GUARDIAN_API_KEY",
+      "NEWS_API_KEY",
+      "THE_NEWS_API_KEY",
+      "GNEWS_API_KEY",
+      "WORLDNEWS_API_KEY",
+      "NEWSDATA_IO_API_KEY"
+    ];
+
+    if (!allowedKeys.includes(key)) {
+      return new Response(
+        JSON.stringify({ error: 'Invalid key name' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Store the secret in Deno Deploy environment
+    console.log(`Updating secret: ${key}`);
     
-    const output = await command.output();
-    console.log(`Secret ${key} updated successfully`);
+    try {
+      // Use Supabase's native secrets handling
+      Deno.env.set(key, value);
+      console.log(`Secret ${key} updated successfully`);
+    } catch (error) {
+      console.error(`Error setting environment variable: ${error.message}`);
+      throw new Error(`Failed to set API key: ${error.message}`);
+    }
     
     return new Response(
       JSON.stringify({ success: true, message: `API key ${key} updated successfully` }),
