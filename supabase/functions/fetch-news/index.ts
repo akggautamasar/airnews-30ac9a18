@@ -20,26 +20,9 @@ serve(async (req) => {
 
     console.log('Received request with params:', { category, isToday, newsAgency });
 
-    // Verify we have the required API key for the requested news agency
-    const apiKeyName = `${newsAgency.toUpperCase().replace(/\s/g, '_')}_API_KEY`;
-    const apiKey = Deno.env.get(apiKeyName) || Deno.env.get(newsAgency.toUpperCase());
-    
-    if (!apiKey && newsAgency !== 'guardian') {
-      console.error(`No API key found for ${newsAgency} (looking for ${apiKeyName})`);
-      return new Response(
-        JSON.stringify({
-          error: `API key not configured for ${newsAgency}`,
-          message: `Please configure the ${apiKeyName} secret in your Supabase project`,
-          availableKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('API_KEY'))
-        }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-
     let apiResponse;
+    let statusCode = 200;
+    let errorMessage = null;
 
     try {
       // Select news provider based on newsAgency parameter
@@ -65,42 +48,42 @@ serve(async (req) => {
 
       // If we successfully get here, log the success
       console.log(`Successfully fetched news from ${newsAgency} for category ${category}`);
-      
-      return new Response(JSON.stringify(apiResponse), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 200
-      });
     } catch (error) {
-      // Capture specific provider errors and enhance the error message
+      // Capture specific provider errors but don't throw
       console.error(`Error fetching from ${newsAgency}:`, error);
+      errorMessage = error.message;
+      statusCode = 200; // Still return 200 to prevent app crash
       
-      // Create a more detailed error response
-      return new Response(
-        JSON.stringify({ 
-          error: `Failed to fetch from ${newsAgency}`,
-          message: error.message,
-          category: category,
-          provider: newsAgency,
-          availableKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('API_KEY'))
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Create a valid but empty response structure
+      apiResponse = {
+        response: {
+          status: 'error',
+          results: [],
+          error: errorMessage,
+          errorSource: newsAgency
         }
-      );
+      };
     }
+
+    return new Response(JSON.stringify(apiResponse), {
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      status: statusCode
+    });
   } catch (error) {
     // Handle general API errors (like JSON parsing)
     console.error('Error in fetch-news function:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: error.message || 'Internal server error',
-        details: error.stack,
-        availableKeys: Object.keys(Deno.env.toObject()).filter(k => k.includes('API_KEY'))
+        response: {
+          status: 'error',
+          results: [],
+          error: error.message || 'Internal server error',
+          errorDetails: error.stack
+        }
       }),
       {
-        status: 500,
+        status: 200, // Return 200 to prevent app crash
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       }
     );

@@ -43,9 +43,22 @@ export async function fetchGuardianNews(category: string, isToday: boolean) {
     const response = await fetch(url);
     
     if (!response.ok) {
-      const errorData = await response.json();
+      const errorText = await response.text();
+      let errorData;
+      
+      try {
+        errorData = JSON.parse(errorText);
+      } catch (e) {
+        errorData = { message: errorText || response.statusText };
+      }
+      
       console.error('Guardian API error response:', errorData);
-      throw new Error(`Guardian API error: ${errorData.message || response.statusText}`);
+      
+      if (response.status === 401 || response.status === 403) {
+        throw new Error(`Guardian API key is invalid or unauthorized. Please check your API key.`);
+      } else {
+        throw new Error(`Guardian API error: ${errorData.message || response.statusText}`);
+      }
     }
     
     const data = await response.json();

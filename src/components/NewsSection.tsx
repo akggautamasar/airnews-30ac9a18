@@ -3,6 +3,9 @@ import { useNewsContent } from "@/hooks/useNewsContent";
 import { NewsContent } from "@/components/news/NewsContent";
 import { NewsNavigation } from "@/components/news/NewsNavigation";
 import { LoadingState, ErrorState } from "@/components/news/NewsStateHandlers";
+import { Button } from "@/components/ui/button";
+import { RefreshCw } from "lucide-react";
+import { useState } from "react";
 
 interface NewsSectionProps {
   selectedCategory: string;
@@ -10,6 +13,8 @@ interface NewsSectionProps {
 }
 
 export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectionProps) => {
+  const [refreshKey, setRefreshKey] = useState(0);
+  
   const {
     combinedContent,
     currentIndex,
@@ -20,14 +25,45 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     handleNext,
     isNewsLoading,
     newsError
-  } = useNewsContent(selectedCategory, selectedNewsAgency);
+  } = useNewsContent(selectedCategory, selectedNewsAgency, refreshKey);
+
+  // Function to retry loading news
+  const handleRetry = () => {
+    setRefreshKey(prev => prev + 1);
+  };
 
   if (isNewsLoading) {
     return <LoadingState isLoading={isNewsLoading} />;
   }
 
   if (newsError) {
-    return <ErrorState error={newsError} />;
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <ErrorState error={newsError} />
+        <Button 
+          onClick={handleRetry} 
+          variant="outline" 
+          className="mt-4 flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" /> Try Again
+        </Button>
+      </div>
+    );
+  }
+
+  if (!combinedContent || combinedContent.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <p className="text-gray-500 mb-4">No news available for this category.</p>
+        <Button 
+          onClick={handleRetry} 
+          variant="outline" 
+          className="flex items-center gap-2"
+        >
+          <RefreshCw className="h-4 w-4" /> Try Again
+        </Button>
+      </div>
+    );
   }
 
   return (
