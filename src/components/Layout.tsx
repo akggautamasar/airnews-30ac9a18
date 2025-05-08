@@ -1,9 +1,11 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { User } from "@supabase/supabase-js";
 import { toast } from "sonner";
+import { useState, useEffect } from "react";
+import { Settings, Search, Home, User as UserIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -11,7 +13,6 @@ interface LayoutProps {
 
 export const Layout = ({ children }: LayoutProps) => {
   const navigate = useNavigate();
-  const [isAdmin, setIsAdmin] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -21,16 +22,6 @@ export const Layout = ({ children }: LayoutProps) => {
         setIsLoading(true);
         const { data: { session } } = await supabase.auth.getSession();
         setUser(session?.user || null);
-        
-        if (session?.user) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('is_admin')
-            .eq('id', session.user.id)
-            .single();
-          
-          setIsAdmin(profile?.is_admin || false);
-        }
       } catch (error) {
         console.error('Error checking user:', error);
         toast.error('Failed to check user status');
@@ -43,57 +34,21 @@ export const Layout = ({ children }: LayoutProps) => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user || null);
-      checkUser();
     });
 
     return () => subscription.unsubscribe();
   }, []);
 
-  const handleSignOut = async () => {
-    try {
-      await supabase.auth.signOut();
-      navigate("/");
-      toast.success("Successfully signed out!");
-    } catch (error: any) {
-      toast.error(error.message);
-    }
-  };
-
   if (isLoading) {
-    return <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      Loading...
+    return <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
     </div>;
   }
 
+  // This is a mobile-first layout inspired by Inshorts app
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-primary text-primary-foreground py-4 px-6 flex justify-between items-center">
-        <div className="flex items-center space-x-4">
-          <Link to="/">
-            <h1 className="text-2xl font-bold">Airnews</h1>
-          </Link>
-          {isAdmin && (
-            <Link to="/admin">
-              <Button variant="secondary">Admin Dashboard</Button>
-            </Link>
-          )}
-        </div>
-        <div className="flex items-center space-x-4">
-          {user ? (
-            <>
-              <span className="text-sm">{user.email}</span>
-              <Button variant="secondary" onClick={handleSignOut}>
-                Sign Out
-              </Button>
-            </>
-          ) : (
-            <Link to="/auth">
-              <Button variant="secondary">Sign In</Button>
-            </Link>
-          )}
-        </div>
-      </header>
-      <main>{children}</main>
+    <div className="min-h-screen bg-white">
+      <main className="h-full">{children}</main>
     </div>
   );
 };

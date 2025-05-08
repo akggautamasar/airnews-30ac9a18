@@ -1,7 +1,8 @@
+
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Bookmark, Share2, ChevronDown } from "lucide-react";
+import { Bookmark, Share2, MoreHorizontal } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { NewsCardProps } from "@/types/news";
@@ -13,7 +14,6 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
   const navigate = useNavigate();
   const [isBookmarked, setIsBookmarked] = useState(false);
   const [isBookmarking, setIsBookmarking] = useState(false);
-  const [showFullArticle, setShowFullArticle] = useState(false);
 
   const handleBookmark = async () => {
     try {
@@ -85,18 +85,20 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
     }
   };
 
-  const summaryText = article.fields?.bodyText?.slice(0, 100) + "...";
-
   return (
     <motion.div className="h-full w-full select-none">
       <Card className="h-full overflow-hidden relative border-none">
         {article.fields?.thumbnail && (
-          <div className="absolute inset-0 bg-black/20 h-1/2">
+          <div className="absolute inset-0 h-1/2">
             <img
               src={article.fields.thumbnail}
               alt={article.webTitle}
               className="w-full h-full object-cover"
             />
+            <div className="absolute bottom-2 left-2 bg-white/90 rounded-full py-1 px-3 flex items-center">
+              <img src="/lovable-uploads/3acd26f4-c871-4f55-bd2d-78795349438a.png" className="h-4 w-4 mr-1" alt="Airnews logo" />
+              <span className="text-xs font-bold">airnews</span>
+            </div>
           </div>
         )}
         <CardContent className="relative h-full flex flex-col p-0">
@@ -108,7 +110,7 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
               </h2>
               
               <p className="text-base text-white/90 leading-relaxed">
-                {showFullArticle ? article.fields?.bodyText : summaryText}
+                {article.fields?.bodyText || "No content available"}
               </p>
 
               <div className="flex items-center justify-between pt-2">
@@ -135,19 +137,17 @@ export const NewsCard = ({ article, category }: NewsCardProps) => {
                   >
                     <Share2 className="h-5 w-5" />
                   </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="text-white hover:text-white/80"
+                  >
+                    <MoreHorizontal className="h-5 w-5" />
+                  </Button>
                 </div>
               </div>
-
-              <div className="flex justify-between items-center gap-4 mt-2">
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowFullArticle(!showFullArticle)}
-                  className="text-white hover:text-white/80 flex items-center gap-2"
-                >
-                  {showFullArticle ? "Show Less" : "Read More"}
-                  <ChevronDown className={`h-4 w-4 transition-transform ${showFullArticle ? "rotate-180" : ""}`} />
-                </Button>
-                
+              
+              <div className="flex justify-between items-center mt-2">
                 <a
                   href={article.webUrl}
                   target="_blank"

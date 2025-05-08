@@ -12,6 +12,8 @@ import Auth from "@/pages/Auth";
 import MobileLockscreen from "@/pages/MobileLockscreen";
 import ApiKeys from "@/pages/ApiKeys";
 import { Toaster } from "@/components/ui/sonner";
+import SavedNews from "@/pages/SavedNews";
+import MyFeed from "@/pages/MyFeed";
 
 function App() {
   return (
@@ -22,6 +24,8 @@ function App() {
           <Route path="admin" element={<Admin />} />
           <Route path="admin/api-keys" element={<ApiKeys />} />
           <Route path="auth" element={<Auth />} />
+          <Route path="saved" element={<SavedNews />} />
+          <Route path="my-feed" element={<MyFeed />} />
         </Route>
         <Route path="/mobile-lockscreen" element={<MobileLockscreen />} />
       </Routes>
