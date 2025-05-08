@@ -31,10 +31,15 @@ export async function fetchNewsDataIO(category: string, pageSize: number = 50) {
       newsCategory = categoryMap[category] || category.toLowerCase();
     }
     
+    // NewsData.io free tier typically accepts 'size' up to 10, paid plans allow more
+    // Let's use 10 as a safe default for the free tier
+    // NOTE: The API will reject invalid values, different plans have different limits
+    const safeSize = Math.min(10, pageSize); // Adjust based on plan limits
+    
     const params = new URLSearchParams({
       'apikey': apiKey,
       'language': 'en',
-      'size': Math.min(pageSize, 100).toString() // NewsData.io limits vary by plan
+      'size': safeSize.toString()
     });
     
     // Add category if specific
@@ -62,6 +67,8 @@ export async function fetchNewsDataIO(category: string, pageSize: number = 50) {
       console.warn('No articles returned from NewsData.io API');
       return transformToStandardFormat([], 'newsdata_io', category);
     }
+    
+    console.log(`Successfully fetched ${data.results.length} articles from NewsData.io API`);
     
     // Transform NewsData.io response to use our standard format
     return transformToStandardFormat(data.results.map((article: any) => ({

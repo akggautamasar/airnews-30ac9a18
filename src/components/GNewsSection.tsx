@@ -21,6 +21,7 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
   const [apiKeyError, setApiKeyError] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [retryCount, setRetryCount] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchNews = async () => {
     setIsLoading(true);
@@ -30,13 +31,13 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
     try {
       console.log("Fetching GNews for category:", selectedCategory);
       
-      // Use Supabase Edge Function with larger page size
+      // Use Supabase Edge Function with larger page size (maximum for the API)
       const response = await supabase.functions.invoke('fetch-news', {
         body: { 
           category: selectedCategory,
           isToday: selectedCategory === "Today's News",
           newsAgency: 'gnews',
-          pageSize: 50 // Request more articles
+          pageSize: 100 // Set to maximum allowed by GNews API
         },
       });
 
@@ -70,6 +71,7 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
       toast.error("Failed to load news from GNews");
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
   };
 
@@ -77,9 +79,14 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
     fetchNews();
   }, [selectedCategory, retryCount]);
 
-  const handleRetry = () => {
+  const handleRefresh = () => {
+    setIsRefreshing(true);
     setRetryCount(prev => prev + 1);
-    toast.info("Retrying...");
+    toast.info("Refreshing news...");
+  };
+
+  const handleRetry = () => {
+    handleRefresh();
   };
 
   const handleNext = () => {
@@ -108,8 +115,10 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
             onClick={handleRetry} 
             variant="outline" 
             className="flex items-center gap-2"
+            disabled={isRefreshing}
           >
-            <RefreshCw className="h-4 w-4" /> Try Again
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
+            {isRefreshing ? 'Refreshing...' : 'Try Again'}
           </Button>
           
           {apiKeyError && (
@@ -147,8 +156,10 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
             onClick={handleRetry} 
             variant="outline" 
             className="flex items-center gap-2"
+            disabled={isRefreshing}
           >
-            <RefreshCw className="h-4 w-4" /> Try Again
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} /> 
+            {isRefreshing ? 'Refreshing...' : 'Try Again'}
           </Button>
           
           <Link to="/admin/api-keys">
@@ -170,6 +181,19 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
         <Badge variant="secondary" className="text-xs font-normal">
           {currentIndex + 1} of {news.length} articles
         </Badge>
+      </div>
+      
+      <div className="absolute top-2 right-2 z-10">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1 bg-background/80 backdrop-blur-sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} /> 
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
       
       {article && (

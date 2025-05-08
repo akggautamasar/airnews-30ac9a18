@@ -21,7 +21,7 @@ serve(async (req) => {
       category = '', 
       isToday = false, 
       newsAgency = 'guardian',
-      pageSize = 50 // Default to 50 articles, can be overridden by the request
+      pageSize = 100 // Default to 100 articles, which is the maximum for most APIs
     } = requestData;
 
     console.log('Received request with params:', { category, isToday, newsAgency, pageSize });

@@ -15,6 +15,7 @@ interface NewsSectionProps {
 
 export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectionProps) => {
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const {
     combinedContent,
@@ -30,9 +31,23 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     totalItems
   } = useNewsContent(selectedCategory, selectedNewsAgency, refreshKey);
 
+  // Function to refresh and load new articles
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    setRefreshKey(prev => prev + 1);
+    
+    // The actual refetch is triggered by changing refreshKey
+    // which is picked up by the useNewsContent hook
+    
+    // Reset refresh state after a short delay
+    setTimeout(() => {
+      setIsRefreshing(false);
+    }, 1500);
+  };
+
   // Function to retry loading news
   const handleRetry = () => {
-    setRefreshKey(prev => prev + 1);
+    handleRefresh();
   };
 
   const isAllNews = selectedNewsAgency === 'all';
@@ -50,8 +65,10 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
             onClick={handleRetry} 
             variant="outline" 
             className="flex items-center gap-2"
+            disabled={isRefreshing}
           >
-            <RefreshCw className="h-4 w-4" /> Try Again
+            <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+            {isRefreshing ? 'Refreshing...' : 'Try Again'}
           </Button>
         </div>
       </div>
@@ -66,8 +83,10 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
           onClick={handleRetry} 
           variant="outline" 
           className="flex items-center gap-2"
+          disabled={isRefreshing}
         >
-          <RefreshCw className="h-4 w-4" /> Try Again
+          <RefreshCw className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Try Again'}
         </Button>
       </div>
     );
@@ -82,10 +101,21 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
         </div>
       )}
       
-      <div className="absolute top-2 left-2 z-10">
+      <div className="absolute top-2 left-2 z-10 flex items-center gap-2">
         <Badge variant="secondary" className="text-xs font-normal">
           {currentIndex + 1} of {totalItems} articles
         </Badge>
+        
+        <Button 
+          variant="outline" 
+          size="sm" 
+          className="flex items-center gap-1 bg-background/80 backdrop-blur-sm"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-3 w-3 ${isRefreshing ? 'animate-spin' : ''}`} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </Button>
       </div>
       
       <NewsContent

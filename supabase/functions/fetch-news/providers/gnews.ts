@@ -15,11 +15,15 @@ export async function fetchGNews(category: string, pageSize: number = 50) {
     // Map category for GNews
     let newsCategory = mapCategoryForGNews(category);
     
+    // GNews free tier allows 100 articles per request, paid plans may allow more
+    // We'll use the maximum allowed based on the user's plan, capped by what they requested
+    const maxArticles = Math.min(pageSize, 100); // Adjust based on API plan limits
+    
     const params = new URLSearchParams({
       'apikey': apiKey,
       'lang': 'en',
       'country': 'us',
-      'max': Math.min(pageSize, 100).toString(), // GNews has different limits based on plan
+      'max': maxArticles.toString(),
       'category': newsCategory
     });
 
@@ -44,6 +48,8 @@ export async function fetchGNews(category: string, pageSize: number = 50) {
       console.warn('No articles returned from GNews API');
       return transformToStandardFormat([], 'gnews', category);
     }
+    
+    console.log(`Successfully fetched ${data.articles.length} articles from GNews API`);
     
     // Transform GNews API response to use our standard format helper
     return transformToStandardFormat(data.articles.map((article: any) => ({
