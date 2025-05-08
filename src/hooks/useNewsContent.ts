@@ -24,7 +24,8 @@ export const useNewsContent = (selectedCategory: string, selectedNewsAgency: str
     'thenewsapi', 
     'gnews', 
     'worldnewsapi', 
-    'newsdata_io'
+    'newsdata_io',
+    'saurav-news' // Added the new API source
   ];
 
   // Fetch from a single news source

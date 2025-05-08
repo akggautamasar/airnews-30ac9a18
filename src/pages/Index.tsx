@@ -32,6 +32,7 @@ const newsAgencies = [
   { id: 'gnews', name: 'GNews API' },
   { id: 'worldnewsapi', name: 'World News API' },
   { id: 'newsdata_io', name: 'NewsData.io' },
+  { id: 'saurav-news', name: 'Saurav News API' }, // Added new news source
   { id: 'google', name: 'Google News' },
   { id: 'google-rss', name: 'Google News RSS' },
   { id: 'ai', name: 'AI Generated' }
@@ -56,6 +57,10 @@ export default function Index() {
       setSearchParams(searchParams);
     } else if (value === 'all') {
       toast.success("Fetching from all available news sources");
+      searchParams.delete('feed');
+      setSearchParams(searchParams);
+    } else if (value === 'saurav-news') {
+      toast.success("Using Saurav News API (no API key required)");
       searchParams.delete('feed');
       setSearchParams(searchParams);
     } else {

@@ -7,6 +7,7 @@ import { fetchTheNewsAPI } from "./providers/thenewsapi.ts";
 import { fetchGNews } from "./providers/gnews.ts";
 import { fetchWorldNewsAPI } from "./providers/worldnewsapi.ts";
 import { fetchNewsDataIO } from "./providers/newsdataio.ts";
+import { fetchSauravNews } from "./providers/saurav-news.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -51,6 +52,9 @@ serve(async (req) => {
           break;
         case 'newsdata_io':
           apiResponse = await fetchNewsDataIO(category, pageSize);
+          break;
+        case 'saurav-news':
+          apiResponse = await fetchSauravNews(category, pageSize);
           break;
         default:
           throw new Error(`Unsupported news agency: ${newsAgency}`);
