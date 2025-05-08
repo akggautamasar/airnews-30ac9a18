@@ -25,6 +25,7 @@ const categories = [
 ];
 
 const newsAgencies = [
+  { id: 'all', name: 'All News Sources' },
   { id: 'guardian', name: 'The Guardian' },
   { id: 'newsapi', name: 'News API' },
   { id: 'thenewsapi', name: 'The News API' },
@@ -51,6 +52,10 @@ export default function Index() {
       toast.success("Using Google News RSS Feed");
     } else if (value === 'gnews') {
       toast.success("Using GNews API");
+      searchParams.delete('feed');
+      setSearchParams(searchParams);
+    } else if (value === 'all') {
+      toast.success("Fetching from all available news sources");
       searchParams.delete('feed');
       setSearchParams(searchParams);
     } else {

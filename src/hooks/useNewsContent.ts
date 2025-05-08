@@ -7,23 +7,103 @@ import { toast } from "sonner";
 export const useNewsContent = (selectedCategory: string, selectedNewsAgency: string, refreshKey: number = 0) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [direction, setDirection] = useState(0);
+  const [allNewsData, setAllNewsData] = useState<any[]>([]);
 
   // Reset current index when category or news agency changes
   useEffect(() => {
     setCurrentIndex(0);
   }, [selectedCategory, selectedNewsAgency, refreshKey]);
 
+  // Handle fetching from all news sources
+  const isAllNews = selectedNewsAgency === 'all';
+
+  // Define the available news agencies to fetch from when "All News" is selected
+  const availableApis = [
+    'guardian', 
+    'newsapi', 
+    'thenewsapi', 
+    'gnews', 
+    'worldnewsapi', 
+    'newsdata_io'
+  ];
+
+  // Fetch from a single news source
   const { data: newsData, isLoading: isNewsLoading, error: newsError, refetch } = useQuery({
     queryKey: ['news', selectedCategory, selectedNewsAgency, refreshKey],
     queryFn: async () => {
       try {
         console.log('Fetching news with params:', { selectedCategory, selectedNewsAgency });
+
+        if (isAllNews) {
+          // Fetch from multiple sources in parallel when "All News" is selected
+          toast.info("Fetching news from multiple sources. This may take a moment...");
+          
+          const results = await Promise.allSettled(
+            availableApis.map(agency => 
+              supabase.functions.invoke('fetch-news', {
+                body: { 
+                  category: selectedCategory,
+                  isToday: selectedCategory === "Today's News",
+                  newsAgency: agency,
+                  pageSize: 50 // Request more articles from each source
+                },
+              })
+            )
+          );
+
+          const combinedResults: any[] = [];
+          let successCount = 0;
+
+          // Process the results from each API call
+          results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+              const apiResponse = result.value;
+              const apiName = availableApis[index];
+              
+              if (apiResponse.data?.response?.results?.length > 0) {
+                // Add source information to each article
+                const articlesWithSource = apiResponse.data.response.results.map((article: any) => ({
+                  ...article,
+                  source: apiName
+                }));
+                
+                combinedResults.push(...articlesWithSource);
+                successCount++;
+              }
+            }
+          });
+
+          // Sort combined results by publication date (newest first)
+          combinedResults.sort((a, b) => {
+            const dateA = new Date(a.webPublicationDate || a.publishedAt || Date.now());
+            const dateB = new Date(b.webPublicationDate || b.publishedAt || Date.now());
+            return dateB.getTime() - dateA.getTime();
+          });
+
+          setAllNewsData(combinedResults);
+          
+          if (combinedResults.length > 0) {
+            toast.success(`Loaded ${combinedResults.length} articles from ${successCount} sources`);
+          } else {
+            toast.warning("No articles found from any source");
+          }
+
+          // Return in the expected format
+          return {
+            response: {
+              status: 'ok',
+              results: combinedResults
+            }
+          };
+        }
         
+        // For single source, make the regular API call
         const response = await supabase.functions.invoke('fetch-news', {
           body: { 
             category: selectedCategory,
             isToday: selectedCategory === "Today's News",
-            newsAgency: selectedNewsAgency
+            newsAgency: selectedNewsAgency,
+            pageSize: 50 // Request more articles
           },
         });
 
@@ -130,6 +210,7 @@ export const useNewsContent = (selectedCategory: string, selectedNewsAgency: str
     handleNext,
     isNewsLoading,
     newsError,
-    refetch
+    refetch,
+    totalItems: combinedContent.length
   };
 };

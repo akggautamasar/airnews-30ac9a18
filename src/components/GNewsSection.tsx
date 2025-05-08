@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, AlertCircle, Settings } from "lucide-react";
+import { RefreshCw, AlertCircle, Settings, ChevronLeft, ChevronRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
 
 interface GNewsSectionProps {
   selectedCategory: string;
@@ -29,12 +30,13 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
     try {
       console.log("Fetching GNews for category:", selectedCategory);
       
-      // Use Supabase Edge Function
+      // Use Supabase Edge Function with larger page size
       const response = await supabase.functions.invoke('fetch-news', {
         body: { 
           category: selectedCategory,
           isToday: selectedCategory === "Today's News",
-          newsAgency: 'gnews'
+          newsAgency: 'gnews',
+          pageSize: 50 // Request more articles
         },
       });
 
@@ -164,6 +166,12 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
   
   return (
     <div className="h-full relative">
+      <div className="absolute top-2 left-2 z-10">
+        <Badge variant="secondary" className="text-xs font-normal">
+          {currentIndex + 1} of {news.length} articles
+        </Badge>
+      </div>
+      
       {article && (
         <div className="h-full">
           <NewsCard article={article} category={selectedCategory} />
@@ -177,16 +185,18 @@ export const GNewsSection = ({ selectedCategory }: GNewsSectionProps) => {
             disabled={currentIndex === 0}
             variant="default"
             size="sm"
+            className="flex items-center gap-1"
           >
-            Previous
+            <ChevronLeft className="h-4 w-4" /> Previous
           </Button>
           <Button 
             onClick={handleNext}
             disabled={currentIndex === news.length - 1}
             variant="default"
             size="sm"
+            className="flex items-center gap-1"
           >
-            Next
+            Next <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       )}

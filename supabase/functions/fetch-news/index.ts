@@ -6,6 +6,7 @@ import { fetchNewsAPI } from "./providers/newsapi.ts";
 import { fetchTheNewsAPI } from "./providers/thenewsapi.ts";
 import { fetchGNews } from "./providers/gnews.ts";
 import { fetchWorldNewsAPI } from "./providers/worldnewsapi.ts";
+import { fetchNewsDataIO } from "./providers/newsdataio.ts";
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -16,9 +17,14 @@ serve(async (req) => {
   try {
     // Parse request body
     const requestData = await req.json();
-    const { category = '', isToday = false, newsAgency = 'guardian' } = requestData;
+    const { 
+      category = '', 
+      isToday = false, 
+      newsAgency = 'guardian',
+      pageSize = 50 // Default to 50 articles, can be overridden by the request
+    } = requestData;
 
-    console.log('Received request with params:', { category, isToday, newsAgency });
+    console.log('Received request with params:', { category, isToday, newsAgency, pageSize });
 
     let apiResponse;
     let statusCode = 200;
@@ -29,19 +35,22 @@ serve(async (req) => {
       // Select news provider based on newsAgency parameter
       switch (newsAgency) {
         case 'guardian':
-          apiResponse = await fetchGuardianNews(category, isToday);
+          apiResponse = await fetchGuardianNews(category, isToday, pageSize);
           break;
         case 'newsapi':
-          apiResponse = await fetchNewsAPI(category);
+          apiResponse = await fetchNewsAPI(category, pageSize);
           break;
         case 'thenewsapi':
-          apiResponse = await fetchTheNewsAPI(category);
+          apiResponse = await fetchTheNewsAPI(category, pageSize);
           break;
         case 'gnews':
-          apiResponse = await fetchGNews(category);
+          apiResponse = await fetchGNews(category, pageSize);
           break;
         case 'worldnewsapi':
-          apiResponse = await fetchWorldNewsAPI(category);
+          apiResponse = await fetchWorldNewsAPI(category, pageSize);
+          break;
+        case 'newsdata_io':
+          apiResponse = await fetchNewsDataIO(category, pageSize);
           break;
         default:
           throw new Error(`Unsupported news agency: ${newsAgency}`);

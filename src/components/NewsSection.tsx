@@ -4,8 +4,9 @@ import { NewsContent } from "@/components/news/NewsContent";
 import { NewsNavigation } from "@/components/news/NewsNavigation";
 import { LoadingState, ErrorState } from "@/components/news/NewsStateHandlers";
 import { Button } from "@/components/ui/button";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, Info } from "lucide-react";
 import { useState } from "react";
+import { Badge } from "@/components/ui/badge";
 
 interface NewsSectionProps {
   selectedCategory: string;
@@ -25,13 +26,16 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
     handleNext,
     isNewsLoading,
     newsError,
-    refetch
+    refetch,
+    totalItems
   } = useNewsContent(selectedCategory, selectedNewsAgency, refreshKey);
 
   // Function to retry loading news
   const handleRetry = () => {
     setRefreshKey(prev => prev + 1);
   };
+
+  const isAllNews = selectedNewsAgency === 'all';
 
   if (isNewsLoading) {
     return <LoadingState isLoading={isNewsLoading} />;
@@ -71,6 +75,19 @@ export const NewsSection = ({ selectedCategory, selectedNewsAgency }: NewsSectio
 
   return (
     <div className="h-full relative overflow-hidden">
+      {isAllNews && (
+        <div className="absolute top-2 right-2 z-10 bg-opacity-70 bg-background rounded-md p-2 flex items-center gap-2">
+          <Info className="h-4 w-4" />
+          <span className="text-sm">Showing news from multiple sources</span>
+        </div>
+      )}
+      
+      <div className="absolute top-2 left-2 z-10">
+        <Badge variant="secondary" className="text-xs font-normal">
+          {currentIndex + 1} of {totalItems} articles
+        </Badge>
+      </div>
+      
       <NewsContent
         currentIndex={currentIndex}
         direction={direction}

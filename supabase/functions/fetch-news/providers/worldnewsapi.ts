@@ -2,8 +2,8 @@
 import { corsHeaders } from "../../_shared/cors.ts";
 import { validateApiKey, transformToStandardFormat } from "../utils.ts";
 
-export async function fetchWorldNewsAPI(category: string) {
-  // Get API key from environment variables, or use a fallback for testing
+export async function fetchWorldNewsAPI(category: string, pageSize: number = 50) {
+  // Get API key from environment variables
   const WORLDNEWS_API_KEY = Deno.env.get('WORLDNEWS_API_KEY');
   
   try {
@@ -14,7 +14,7 @@ export async function fetchWorldNewsAPI(category: string) {
     
     const params = new URLSearchParams({
       'api-key': apiKey,
-      'number': '10',
+      'number': Math.min(pageSize, 100).toString(), // Worldnews API has different limits based on plan
       'language': 'en'
     });
     

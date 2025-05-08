@@ -2,7 +2,7 @@
 import { corsHeaders } from "../../_shared/cors.ts";
 import { validateApiKey, transformToStandardFormat } from "../utils.ts";
 
-export async function fetchNewsAPI(category: string) {
+export async function fetchNewsAPI(category: string, pageSize: number = 50) {
   // Get API key from environment variables
   const NEWS_API_KEY = Deno.env.get('NEWS_API_KEY');
   
@@ -20,7 +20,7 @@ export async function fetchNewsAPI(category: string) {
     
     const params = new URLSearchParams({
       'apiKey': apiKey,
-      'pageSize': '10',
+      'pageSize': Math.min(pageSize, 100).toString(), // NewsAPI limits to 100 articles max
       'language': 'en',
       'country': 'us'
     });

@@ -2,7 +2,7 @@
 import { corsHeaders } from "../../_shared/cors.ts";
 import { validateApiKey } from "../utils.ts";
 
-export async function fetchGuardianNews(category: string, isToday: boolean) {
+export async function fetchGuardianNews(category: string, isToday: boolean, pageSize: number = 50) {
   // Get API key from environment variables
   const GUARDIAN_API_KEY = Deno.env.get('GUARDIAN_API_KEY');
   
@@ -22,7 +22,7 @@ export async function fetchGuardianNews(category: string, isToday: boolean) {
     const params = new URLSearchParams({
       'api-key': apiKey,
       'show-fields': 'thumbnail,bodyText,trailText',
-      'page-size': '10',
+      'page-size': pageSize.toString(),
       'order-by': 'newest',
     });
 

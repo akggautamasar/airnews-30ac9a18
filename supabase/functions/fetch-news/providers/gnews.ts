@@ -2,7 +2,7 @@
 import { corsHeaders } from "../../_shared/cors.ts";
 import { mapCategoryForGNews, validateApiKey, transformToStandardFormat } from "../utils.ts";
 
-export async function fetchGNews(category: string) {
+export async function fetchGNews(category: string, pageSize: number = 50) {
   // Get API key from environment variables
   const GNEWS_API_KEY = Deno.env.get('GNEWS_API_KEY');
   
@@ -19,7 +19,7 @@ export async function fetchGNews(category: string) {
       'apikey': apiKey,
       'lang': 'en',
       'country': 'us',
-      'max': '10',
+      'max': Math.min(pageSize, 100).toString(), // GNews has different limits based on plan
       'category': newsCategory
     });
 
