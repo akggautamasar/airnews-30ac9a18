@@ -61,8 +61,8 @@ export const NewsCardInshorts = ({
   };
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="relative h-1/2 bg-gray-100">
+    <div className="flex flex-col min-h-full max-w-3xl mx-auto">
+      <div className="relative h-1/2 min-h-[40vh] bg-gray-100">
         {article.fields?.thumbnail || article.image || article.urlToImage ? (
           <img 
             src={article.fields?.thumbnail || article.image || article.urlToImage} 
@@ -85,7 +85,7 @@ export const NewsCardInshorts = ({
         </div>
       </div>
       
-      <div className="p-4 flex-1 flex flex-col">
+      <div className="p-4 flex-1 flex flex-col overflow-y-auto">
         <h2 className="text-xl font-bold mb-2">{article.webTitle || article.title}</h2>
         <p className="text-gray-600 mb-4">
           {article.fields?.bodyText || article.description || "No description available"}

@@ -1,6 +1,7 @@
+
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Home, Bookmark, User, MoreHorizontal, Share2 } from "lucide-react";
+import { Search, Home, Bookmark, User, MoreHorizontal, Share2, ArrowUp, ArrowDown } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useNewsContent } from "@/hooks/useNewsContent";
@@ -48,6 +49,7 @@ export default function Index() {
   const [currentNewsIndex, setCurrentNewsIndex] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const newsContainerRef = useRef<HTMLDivElement>(null);
   
   const {
     combinedContent,
@@ -82,19 +84,31 @@ export default function Index() {
   const handleNextNews = () => {
     if (currentNewsIndex < combinedContent.length - 1) {
       setCurrentNewsIndex(prevIndex => prevIndex + 1);
+      if (newsContainerRef.current) {
+        newsContainerRef.current.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
     }
   };
   
   const handlePreviousNews = () => {
     if (currentNewsIndex > 0) {
       setCurrentNewsIndex(prevIndex => prevIndex - 1);
+      if (newsContainerRef.current) {
+        newsContainerRef.current.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
     }
   };
   
   const handleSwipe = (event: React.TouchEvent) => {
     const touchStartX = event.touches[0].clientX;
-    const touchEndX = event.changedTouches[0].clientX;
     const touchStartY = event.touches[0].clientY;
+    const touchEndX = event.changedTouches[0].clientX;
     const touchEndY = event.changedTouches[0].clientY;
     
     const xDiff = touchStartX - touchEndX;
@@ -111,7 +125,7 @@ export default function Index() {
   };
 
   return (
-    <div className="flex flex-col h-screen bg-white">
+    <div className="flex flex-col h-screen bg-white max-w-3xl mx-auto">
       {/* Header for mobile view with tabs */}
       <div className="sticky top-0 z-10 bg-white border-b">
         {isSearchOpen ? (
@@ -161,7 +175,7 @@ export default function Index() {
       </div>
 
       {/* Main content */}
-      <div className="flex-1 overflow-hidden">
+      <div className="flex-1 overflow-hidden relative">
         {isNewsLoading ? (
           <div className="h-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
@@ -172,25 +186,54 @@ export default function Index() {
             <Button onClick={handleRefresh}>Try Again</Button>
           </div>
         ) : combinedContent.length > 0 ? (
-          <div 
-            className="h-full relative" 
-            onTouchStart={handleSwipe}
-            onTouchEnd={handleSwipe}
-          >
-            <div className="h-full">
+          <div className="h-full relative">
+            <div 
+              className="h-full overflow-y-auto"
+              ref={newsContainerRef}
+            >
+              {/* Web navigation arrows */}
+              {!isMobile && (
+                <div className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 flex flex-col gap-4">
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handlePreviousNews} 
+                    disabled={currentNewsIndex === 0}
+                    className="rounded-full shadow-md bg-white"
+                  >
+                    <ArrowUp className="h-5 w-5" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    onClick={handleNextNews} 
+                    disabled={currentNewsIndex === combinedContent.length - 1}
+                    className="rounded-full shadow-md bg-white"
+                  >
+                    <ArrowDown className="h-5 w-5" />
+                  </Button>
+                </div>
+              )}
               {combinedContent[currentNewsIndex] && (
-                <InShortsStyle 
-                  item={combinedContent[currentNewsIndex]} 
-                  currentIndex={currentNewsIndex}
-                  totalItems={totalItems}
-                />
+                <div
+                  onTouchStart={isMobile ? handleSwipe : undefined}
+                  onTouchEnd={isMobile ? handleSwipe : undefined}
+                >
+                  <InShortsStyle 
+                    item={combinedContent[currentNewsIndex]} 
+                    currentIndex={currentNewsIndex}
+                    totalItems={totalItems}
+                  />
+                </div>
               )}
             </div>
             
-            {/* Swipe indicator */}
-            <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
-              Swipe for more news
-            </div>
+            {/* Swipe indicator for mobile */}
+            {isMobile && (
+              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
+                Swipe for more news
+              </div>
+            )}
           </div>
         ) : (
           <div className="h-full flex flex-col items-center justify-center p-4">
@@ -295,8 +338,8 @@ const InShortsStyle = ({ item, currentIndex, totalItems }: { item: any, currentI
   const article = item.content;
   
   return (
-    <div className="flex flex-col h-full">
-      <div className="relative h-1/2 bg-gray-100">
+    <div className="flex flex-col min-h-full">
+      <div className="relative h-1/2 min-h-[40vh] bg-gray-100">
         {article.fields?.thumbnail || article.image || article.urlToImage ? (
           <img 
             src={article.fields?.thumbnail || article.image || article.urlToImage} 
