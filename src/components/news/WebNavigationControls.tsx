@@ -17,6 +17,13 @@ export function WebNavigationControls({
 }: WebNavigationControlsProps) {
   return (
     <div className="fixed right-4 top-1/2 transform -translate-y-1/2 z-20 flex flex-col gap-4 md:right-8">
+      <div className="mb-4 flex justify-center">
+        <img 
+          src="/lovable-uploads/75566c73-e7d9-4497-9265-da577f300186.png" 
+          alt="AirNews" 
+          className="h-12 w-auto"
+        />
+      </div>
       <Button 
         variant="outline" 
         size="icon" 

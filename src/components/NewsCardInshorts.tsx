@@ -76,8 +76,8 @@ export const NewsCardInshorts = ({
         )}
         <div className="absolute bottom-0 left-0 right-0 flex justify-between items-center p-2">
           <div className="bg-white/90 rounded-full py-1 px-3 flex items-center">
-            <img src="/lovable-uploads/3acd26f4-c871-4f55-bd2d-78795349438a.png" className="h-6 w-6 mr-1" alt="Airnews logo" />
-            <span className="text-sm font-bold">airnews</span>
+            <img src="/lovable-uploads/75566c73-e7d9-4497-9265-da577f300186.png" className="h-6 w-6 mr-1" alt="AirNews logo" />
+            <span className="text-sm font-bold">AirNews</span>
           </div>
           <div className="text-white text-sm bg-black/40 px-2 py-1 rounded-full">
             {currentIndex + 1} of {totalItems}
