@@ -1,7 +1,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Home, Bookmark, User, MoreHorizontal, Share2, ArrowUp, ArrowDown } from "lucide-react";
+import { Search, Home, Bookmark, User, Bell, Video, TrendingUp } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useNewsContent } from "@/hooks/useNewsContent";
@@ -10,6 +10,9 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { TrendingInsight } from "@/components/news/TrendingInsight";
+import { VideoNews } from "@/components/news/VideoNews";
+import { NotificationsFeed } from "@/components/news/NotificationsFeed";
 
 const categories = [
   "All News",
@@ -22,6 +25,7 @@ const categories = [
   "World",
   "Science",
   "Health",
+  "Videos",
   "Trending"
 ];
 
@@ -39,6 +43,70 @@ const newsAgencies = [
   { id: 'ai', name: 'AI Generated' }
 ];
 
+// Sample video news data
+const sampleVideoNews = [
+  {
+    id: "1",
+    title: "\"Common Family Man...\" Pak Denies US-Sanctioned Terrorist Led Funeral",
+    videoUrl: "https://www.example.com/video1.mp4",
+    thumbnailUrl: "https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg",
+    source: "CRUX News",
+    publishedAt: "few hours ago"
+  },
+  {
+    id: "2",
+    title: "Congress Leaders Meet After Big Win, Discuss Government Formation",
+    videoUrl: "https://www.example.com/video2.mp4",
+    thumbnailUrl: "https://images.pexels.com/photos/3944104/pexels-photo-3944104.jpeg",
+    source: "Daily News",
+    publishedAt: "2 hours ago"
+  }
+];
+
+// Sample trending insights data
+const sampleTrendingInsights = [
+  {
+    id: "1",
+    headline: "Pakistan's Plea",
+    quotes: [
+      "And after suffering heavy losses, Pakistan's army contacted our DGMO on the afternoon of 10th May.",
+      "When Pakistan appealed and said that it would not indulge in any sort of terror activities or military audacity further, India considered it."
+    ],
+    imageUrl: "https://images.pexels.com/photos/1464625/pexels-photo-1464625.jpeg"
+  },
+  {
+    id: "2",
+    headline: "Climate Summit Outcomes",
+    quotes: [
+      "Nations agreed to reduce carbon emissions by 50% before 2030.",
+      "This is the most ambitious climate agreement in history."
+    ],
+    imageUrl: "https://images.pexels.com/photos/2559941/pexels-photo-2559941.jpeg"
+  }
+];
+
+// Sample notifications data
+const sampleNotifications = [
+  {
+    id: "1",
+    title: "Sanjay Manjrekar's 13-year-old tweet targeting Virat Kohli resurfaces after he praises him",
+    imageUrl: "https://images.pexels.com/photos/3148452/pexels-photo-3148452.jpeg",
+    timestamp: "2023-05-13T10:30:00Z"
+  },
+  {
+    id: "2",
+    title: "BCCI didn't urge Virat Kohli to not retire, told him he doesn't fit in Test team: Report",
+    imageUrl: "https://images.pexels.com/photos/2834917/pexels-photo-2834917.jpeg",
+    timestamp: "2023-05-13T09:15:00Z"
+  },
+  {
+    id: "3",
+    title: "IPL 2025 to resume on May 17, revised schedule released",
+    imageUrl: "https://images.pexels.com/photos/3952042/pexels-photo-3952042.jpeg",
+    timestamp: "2023-05-13T08:45:00Z"
+  }
+];
+
 export default function Index() {
   const [selectedCategory, setSelectedCategory] = useState("All News");
   const [selectedNewsAgency, setSelectedNewsAgency] = useState('all');
@@ -50,6 +118,9 @@ export default function Index() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const newsContainerRef = useRef<HTMLDivElement>(null);
+  const [currentVideoIndex, setCurrentVideoIndex] = useState(0);
+  const [currentTrendingIndex, setCurrentTrendingIndex] = useState(0);
+  const [showNotifications, setShowNotifications] = useState(false);
   
   const {
     combinedContent,
@@ -66,7 +137,14 @@ export default function Index() {
   const handleSelectCategory = (category: string) => {
     setSelectedCategory(category);
     setCurrentNewsIndex(0);
-    if (category === "My Feed") {
+    setShowNotifications(false);
+
+    // Reset specific indices based on category
+    if (category === "Videos") {
+      setCurrentVideoIndex(0);
+    } else if (category === "Trending") {
+      setCurrentTrendingIndex(0);
+    } else if (category === "My Feed") {
       // Check if user is logged in
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (!session) {
@@ -104,6 +182,30 @@ export default function Index() {
       }
     }
   };
+
+  const handleNextVideo = () => {
+    if (currentVideoIndex < sampleVideoNews.length - 1) {
+      setCurrentVideoIndex(prevIndex => prevIndex + 1);
+    }
+  };
+
+  const handlePreviousVideo = () => {
+    if (currentVideoIndex > 0) {
+      setCurrentVideoIndex(prevIndex => prevIndex - 1);
+    }
+  };
+
+  const handleNextTrending = () => {
+    if (currentTrendingIndex < sampleTrendingInsights.length - 1) {
+      setCurrentTrendingIndex(prevIndex => prevIndex + 1);
+    }
+  };
+
+  const handlePreviousTrending = () => {
+    if (currentTrendingIndex > 0) {
+      setCurrentTrendingIndex(prevIndex => prevIndex - 1);
+    }
+  };
   
   const handleSwipe = (event: React.TouchEvent) => {
     const touchStartX = event.touches[0].clientX;
@@ -117,11 +219,37 @@ export default function Index() {
     // If vertical swipe is greater than horizontal swipe
     if (Math.abs(yDiff) > Math.abs(xDiff)) {
       if (yDiff > 50) {
-        handleNextNews();
+        if (selectedCategory === "Videos") {
+          handleNextVideo();
+        } else if (selectedCategory === "Trending") {
+          handleNextTrending();
+        } else {
+          handleNextNews();
+        }
       } else if (yDiff < -50) {
-        handlePreviousNews();
+        if (selectedCategory === "Videos") {
+          handlePreviousVideo();
+        } else if (selectedCategory === "Trending") {
+          handlePreviousTrending();
+        } else {
+          handlePreviousNews();
+        }
       }
     }
+  };
+
+  const handleToggleNotifications = () => {
+    setShowNotifications(!showNotifications);
+    // Reset other content when showing notifications
+    if (!showNotifications) {
+      setSelectedCategory("All News");
+    }
+  };
+
+  const handleNotificationClick = (notificationId: string) => {
+    // Navigate to the specific news article or handle as needed
+    toast.info(`Opening notification ${notificationId}`);
+    setShowNotifications(false);
   };
 
   return (
@@ -153,14 +281,14 @@ export default function Index() {
             <div className="py-2">
               <ScrollArea className="w-full whitespace-nowrap">
                 <div className="flex p-2 space-x-4">
-                  {categories.slice(0, 3).map((category) => (
+                  {categories.map((category) => (
                     <Button
                       key={category}
                       variant={selectedCategory === category ? "default" : "ghost"}
                       onClick={() => handleSelectCategory(category)}
                       className={
                         selectedCategory === category
-                          ? "text-blue-500 font-bold bg-transparent hover:bg-transparent"
+                          ? `text-${category === "Videos" ? "blue" : category === "Trending" ? "blue" : "blue"}-500 font-bold bg-transparent hover:bg-transparent`
                           : "text-gray-500 hover:text-blue-500 bg-transparent hover:bg-transparent"
                       }
                     >
@@ -176,7 +304,13 @@ export default function Index() {
 
       {/* Main content */}
       <div className="flex-1 overflow-hidden relative">
-        {isNewsLoading ? (
+        {showNotifications ? (
+          <NotificationsFeed 
+            notifications={sampleNotifications}
+            onViewAll={() => navigate("/notifications")}
+            onNotificationClick={handleNotificationClick}
+          />
+        ) : isNewsLoading ? (
           <div className="h-full flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           </div>
@@ -184,6 +318,52 @@ export default function Index() {
           <div className="h-full flex flex-col items-center justify-center p-4">
             <p className="text-red-500 mb-4">Error loading news: {newsError.message}</p>
             <Button onClick={handleRefresh}>Try Again</Button>
+          </div>
+        ) : selectedCategory === "Videos" ? (
+          <div className="h-full relative">
+            {sampleVideoNews.length > 0 && (
+              <div
+                onTouchStart={isMobile ? handleSwipe : undefined}
+                onTouchEnd={isMobile ? handleSwipe : undefined}
+              >
+                <VideoNews
+                  title={sampleVideoNews[currentVideoIndex].title}
+                  videoUrl={sampleVideoNews[currentVideoIndex].videoUrl}
+                  thumbnailUrl={sampleVideoNews[currentVideoIndex].thumbnailUrl}
+                  source={sampleVideoNews[currentVideoIndex].source}
+                  publishedAt={sampleVideoNews[currentVideoIndex].publishedAt}
+                />
+              </div>
+            )}
+            
+            {/* Swipe indicator for mobile */}
+            {isMobile && (
+              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
+                Swipe for more videos
+              </div>
+            )}
+          </div>
+        ) : selectedCategory === "Trending" ? (
+          <div className="h-full relative">
+            {sampleTrendingInsights.length > 0 && (
+              <div
+                onTouchStart={isMobile ? handleSwipe : undefined}
+                onTouchEnd={isMobile ? handleSwipe : undefined}
+              >
+                <TrendingInsight
+                  headline={sampleTrendingInsights[currentTrendingIndex].headline}
+                  quotes={sampleTrendingInsights[currentTrendingIndex].quotes}
+                  imageUrl={sampleTrendingInsights[currentTrendingIndex].imageUrl}
+                />
+              </div>
+            )}
+            
+            {/* Swipe indicator for mobile */}
+            {isMobile && (
+              <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 text-xs text-gray-500">
+                Swipe for more insights
+              </div>
+            )}
           </div>
         ) : combinedContent.length > 0 ? (
           <div className="h-full relative">
@@ -253,16 +433,36 @@ export default function Index() {
           <Home size={24} />
           <span>Home</span>
         </Button>
-        <Button variant="ghost" onClick={() => navigate("/auth")} className="flex flex-col items-center text-xs">
-          <User size={24} />
-          <span>Profile</span>
+        <Button 
+          variant="ghost" 
+          onClick={() => handleSelectCategory("Videos")}
+          className={`flex flex-col items-center text-xs ${selectedCategory === "Videos" ? "text-blue-500" : ""}`}
+        >
+          <Video size={24} />
+          <span>Videos</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          onClick={() => handleSelectCategory("Trending")}
+          className={`flex flex-col items-center text-xs ${selectedCategory === "Trending" ? "text-blue-500" : ""}`}
+        >
+          <TrendingUp size={24} />
+          <span>Trending</span>
+        </Button>
+        <Button 
+          variant="ghost" 
+          onClick={handleToggleNotifications} 
+          className={`flex flex-col items-center text-xs ${showNotifications ? "text-blue-500" : ""}`}
+        >
+          <Bell size={24} />
+          <span>Alerts</span>
         </Button>
       </div>
     </div>
   );
 }
 
-// New InShortsStyle component for the news display
+// InShortsStyle component (kept from existing code)
 const InShortsStyle = ({ item, currentIndex, totalItems }: { item: any, currentIndex: number, totalItems: number }) => {
   const [bookmarked, setBookmarked] = useState(false);
   const navigate = useNavigate();
@@ -390,4 +590,3 @@ const InShortsStyle = ({ item, currentIndex, totalItems }: { item: any, currentI
     </div>
   );
 };
-
