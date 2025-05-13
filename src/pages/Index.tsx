@@ -1,7 +1,6 @@
-
 import { useState, useRef, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { Search, Home, Bookmark, User, Bell, Video, TrendingUp } from "lucide-react";
+import { Search, Home, Bookmark, User, Bell, Video, TrendingUp, ArrowUp, ArrowDown, Share2, MoreHorizontal } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { useNewsContent } from "@/hooks/useNewsContent";
