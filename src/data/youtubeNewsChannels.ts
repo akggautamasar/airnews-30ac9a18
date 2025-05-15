@@ -11,6 +11,41 @@ export interface NewsVideo {
   thumbnailUrl: string;
 }
 
+export interface NewsChannel {
+  id: string;
+  name: string;
+  channelId: string;
+  thumbnail: string;
+  subscriberCount?: string;
+}
+
+export const youtubeNewsChannels: NewsChannel[] = [
+  {
+    id: "1",
+    name: "CRUX News",
+    channelId: "UCypvGLCDuJbUPHpDm2Kd0JQ", // CRUX News channel ID
+    thumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZRatfLRZ7qWpFPgnWghrCN5z6-1_cGZoc8Mr_wh=s176-c-k-c0x00ffffff-no-rj"
+  },
+  {
+    id: "2",
+    name: "NDTV",
+    channelId: "UCz8QaiQxApLq8sLNcszYyJw", // NDTV channel ID
+    thumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZQoP-lw8VvfJM0v-xBxz3yd3DQMEfgXvIWGIE0t=s176-c-k-c0x00ffffff-no-rj"
+  },
+  {
+    id: "3",
+    name: "Live Mint",
+    channelId: "UCsRTLkBCRCgBoRqEHTTUDuQ", // Live Mint channel ID
+    thumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZTwDIzWgJ9ZbDOzKDCTcnHUn4CdzTV68TfhQJ-m9A=s176-c-k-c0x00ffffff-no-rj"
+  },
+  {
+    id: "4",
+    name: "The Lallantop",
+    channelId: "UCx8Z14PpntdaxCt2hakbQLQ", // The Lallantop channel ID
+    thumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZQZrKyj4g5hGJHiggbvRCn0HnRbKjDZSQDlQi_zIQ=s176-c-k-c0x00ffffff-no-rj"
+  }
+];
+
 export const youtubeNewsVideos: NewsVideo[] = [
   {
     id: "1",
@@ -50,7 +85,7 @@ export const youtubeNewsVideos: NewsVideo[] = [
     videoId: "vdnCkcZLK3I",
     title: "Google I/O 2024: All Announcements in 12 Minutes!",
     channelName: "Tech Today",
-    channelThumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZQmDCXxiT2nlNGvbcazyElKf2pJfKk92MgZiqhB=s176-c-k-c0x00ffffff-no-rj",
+    channelThumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZQZrKyj4g5hGJHiggbvRCn0HnRbKjDZSQDlQi_zIQ=s176-c-k-c0x00ffffff-no-rj",
     publishedAt: "2 days ago",
     views: "1.2M",
     category: "Technology",
@@ -77,6 +112,51 @@ export const youtubeNewsVideos: NewsVideo[] = [
     views: "950K",
     category: "World",
     thumbnailUrl: "https://i.ytimg.com/vi/vPwaXytZcgI/hqdefault.jpg"
+  },
+  // New videos from the requested channels
+  {
+    id: "7",
+    videoId: "anmnaiEkKLY",
+    title: "QUAD Summit: PM Modi Joins Biden, Kishida & Albanese For QUAD Plenary At Wilmington",
+    channelName: "CRUX News",
+    channelThumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZRatfLRZ7qWpFPgnWghrCN5z6-1_cGZoc8Mr_wh=s176-c-k-c0x00ffffff-no-rj",
+    publishedAt: "10 hours ago",
+    views: "94K",
+    category: "World",
+    thumbnailUrl: "https://i.ytimg.com/vi/anmnaiEkKLY/hqdefault.jpg"
+  },
+  {
+    id: "8",
+    videoId: "w8mWQmhLxwg",
+    title: "Indian Elections: NDTV Exit Polls Show BJP 3rd Consecutive Victory",
+    channelName: "NDTV",
+    channelThumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZQoP-lw8VvfJM0v-xBxz3yd3DQMEfgXvIWGIE0t=s176-c-k-c0x00ffffff-no-rj",
+    publishedAt: "3 days ago",
+    views: "121K",
+    category: "Politics",
+    thumbnailUrl: "https://i.ytimg.com/vi/w8mWQmhLxwg/hqdefault.jpg"
+  },
+  {
+    id: "9",
+    videoId: "Lz731gO0kQY",
+    title: "Tech Mahindra inks $300-mn deal with LivePerson: What you need to know",
+    channelName: "Live Mint",
+    channelThumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZTwDIzWgJ9ZbDOzKDCTcnHUn4CdzTV68TfhQJ-m9A=s176-c-k-c0x00ffffff-no-rj",
+    publishedAt: "1 day ago",
+    views: "14K",
+    category: "Business",
+    thumbnailUrl: "https://i.ytimg.com/vi/Lz731gO0kQY/hqdefault.jpg"
+  },
+  {
+    id: "10",
+    videoId: "ofQwEs8ywpk",
+    title: "Exit Poll में कौन जीता, कौन हारा? | Jharkhand | Jammu Kashmir | Maharashtra | Haryana",
+    channelName: "The Lallantop",
+    channelThumbnail: "https://yt3.googleusercontent.com/ytc/AIf8zZQZrKyj4g5hGJHiggbvRCn0HnRbKjDZSQDlQi_zIQ=s176-c-k-c0x00ffffff-no-rj",
+    publishedAt: "6 hours ago",
+    views: "352K",
+    category: "Politics",
+    thumbnailUrl: "https://i.ytimg.com/vi/ofQwEs8ywpk/hqdefault.jpg"
   }
 ];
 
