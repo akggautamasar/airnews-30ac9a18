@@ -3,10 +3,11 @@ import { useState } from "react";
 import { Play, Share2, Volume2, VolumeX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { YouTubePlayer } from "./YouTubePlayer";
 
 interface VideoNewsProps {
   title: string;
-  videoUrl: string;
+  videoId: string;       // YouTube video ID
   thumbnailUrl: string;
   source: string;
   publishedAt: string;
@@ -14,32 +15,29 @@ interface VideoNewsProps {
 
 export const VideoNews: React.FC<VideoNewsProps> = ({
   title,
-  videoUrl,
+  videoId,
   thumbnailUrl,
   source,
   publishedAt
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-  
-  const handleMuteToggle = () => {
-    setIsMuted(!isMuted);
+    setIsPlaying(true);
   };
   
   const handleShare = async () => {
     try {
+      const shareUrl = `https://www.youtube.com/watch?v=${videoId}`;
+      
       if (navigator.share) {
         await navigator.share({
           title: title,
           text: `Check out this video: ${title}`,
-          url: videoUrl || window.location.href
+          url: shareUrl
         });
       } else {
-        await navigator.clipboard.writeText(`${title}\n${videoUrl || window.location.href}`);
+        await navigator.clipboard.writeText(`${title}\n${shareUrl}`);
         toast.success("Video link copied to clipboard!");
       }
     } catch (error) {
@@ -51,14 +49,7 @@ export const VideoNews: React.FC<VideoNewsProps> = ({
     <div className="flex flex-col h-full">
       <div className="relative h-[70vh] bg-black overflow-hidden">
         {isPlaying ? (
-          <video
-            src={videoUrl}
-            poster={thumbnailUrl}
-            className="w-full h-full object-contain"
-            autoPlay
-            controls={false}
-            muted={isMuted}
-          />
+          <YouTubePlayer videoId={videoId} title={title} />
         ) : (
           <div className="relative w-full h-full">
             <img 
@@ -84,23 +75,6 @@ export const VideoNews: React.FC<VideoNewsProps> = ({
             <span className="text-white text-sm font-medium">{source}</span>
           </div>
         </div>
-
-        {isPlaying && (
-          <div className="absolute bottom-4 right-4 flex gap-2">
-            <Button 
-              onClick={handleMuteToggle}
-              variant="ghost" 
-              size="icon"
-              className="rounded-full bg-black/50 text-white hover:bg-black/70"
-            >
-              {isMuted ? (
-                <VolumeX className="h-5 w-5" />
-              ) : (
-                <Volume2 className="h-5 w-5" />
-              )}
-            </Button>
-          </div>
-        )}
       </div>
       
       <div className="p-4 bg-white">
