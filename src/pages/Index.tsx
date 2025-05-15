@@ -12,6 +12,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { TrendingInsight } from "@/components/news/TrendingInsight";
 import { VideoNews } from "@/components/news/VideoNews";
 import { NotificationsFeed } from "@/components/news/NotificationsFeed";
+import { youtubeNewsVideos } from "@/data/youtubeNewsChannels";
 
 const categories = [
   "All News",
@@ -183,7 +184,7 @@ export default function Index() {
   };
 
   const handleNextVideo = () => {
-    if (currentVideoIndex < sampleVideoNews.length - 1) {
+    if (currentVideoIndex < youtubeNewsVideos.length - 1) {
       setCurrentVideoIndex(prevIndex => prevIndex + 1);
     }
   };
@@ -320,17 +321,17 @@ export default function Index() {
           </div>
         ) : selectedCategory === "Videos" ? (
           <div className="h-full relative">
-            {sampleVideoNews.length > 0 && (
+            {youtubeNewsVideos.length > 0 && (
               <div
                 onTouchStart={isMobile ? handleSwipe : undefined}
                 onTouchEnd={isMobile ? handleSwipe : undefined}
               >
                 <VideoNews
-                  title={sampleVideoNews[currentVideoIndex].title}
-                  videoUrl={sampleVideoNews[currentVideoIndex].videoUrl}
-                  thumbnailUrl={sampleVideoNews[currentVideoIndex].thumbnailUrl}
-                  source={sampleVideoNews[currentVideoIndex].source}
-                  publishedAt={sampleVideoNews[currentVideoIndex].publishedAt}
+                  title={youtubeNewsVideos[currentVideoIndex].title}
+                  videoId={youtubeNewsVideos[currentVideoIndex].videoId}
+                  thumbnailUrl={youtubeNewsVideos[currentVideoIndex].thumbnailUrl}
+                  source={youtubeNewsVideos[currentVideoIndex].channelName}
+                  publishedAt={youtubeNewsVideos[currentVideoIndex].publishedAt}
                 />
               </div>
             )}
