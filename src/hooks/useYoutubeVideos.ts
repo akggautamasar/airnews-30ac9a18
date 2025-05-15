@@ -13,6 +13,7 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+  const [currentCategory, setCurrentCategory] = useState<string>("All");
 
   useEffect(() => {
     // Set videos initially
@@ -35,8 +36,13 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
           video => video.channelName === channel.name
         );
         
+        // If a category is selected, filter by that too
+        const categoryFilteredVideos = currentCategory === "All" ? 
+          filteredVideos : 
+          filteredVideos.filter(video => video.category === currentCategory);
+        
         if (filteredVideos.length > 0) {
-          setVideos(filteredVideos);
+          setVideos(categoryFilteredVideos.length > 0 ? categoryFilteredVideos : filteredVideos);
           toast.success(`Showing videos from ${channel.name}`);
         } else {
           // If no videos found for this channel, show all videos
@@ -54,6 +60,8 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
   };
 
   const filterByCategory = (category: string) => {
+    setCurrentCategory(category);
+    
     if (category === 'All') {
       if (selectedChannel) {
         // If a channel is selected, filter by that channel
@@ -76,8 +84,8 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
       if (filtered.length > 0) {
         setVideos(filtered);
       } else {
-        setVideos(initialVideos);
-        toast.info(`No videos found in category ${category}. Showing all videos instead.`);
+        setVideos([]);
+        toast.info(`No videos found in category ${category}.`);
       }
     }
   };
@@ -88,8 +96,12 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
     if (channelId) {
       fetchChannelVideos(channelId);
     } else {
-      // Reset to all videos
-      setVideos(initialVideos);
+      // Reset to all videos but maintain category filter
+      if (currentCategory !== 'All') {
+        filterByCategory(currentCategory);
+      } else {
+        setVideos(initialVideos);
+      }
     }
   };
 

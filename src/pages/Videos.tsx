@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Search, Youtube, Filter } from "lucide-react";
+import { ArrowLeft, Search, Youtube, Filter, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { VideoNews } from "@/components/news/VideoNews";
@@ -14,6 +14,12 @@ import {
 import { useYoutubeVideos } from "@/hooks/useYoutubeVideos";
 import { Avatar } from "@/components/ui/avatar";
 import { toast } from "sonner";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Videos() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -132,46 +138,73 @@ export default function Videos() {
 
         {!isSearchOpen && !selectedVideoId && (
           <>
-            {/* Channels */}
-            <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex p-2 space-x-2">
-                <div 
-                  className={`flex flex-col items-center p-2 cursor-pointer ${selectedChannel === null ? 'opacity-100' : 'opacity-60'}`}
-                  onClick={() => handleChannelSelect(null)}
-                >
-                  <Avatar className="h-16 w-16 rounded-full border-2 border-gray-200">
-                    <div className="flex items-center justify-center h-full w-full bg-gray-100 rounded-full">
-                      <Youtube className="h-8 w-8 text-red-600" />
+            {/* Channel Dropdown */}
+            <div className="px-4 py-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" className="w-full flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                      {selectedChannel ? (
+                        <>
+                          <Avatar className="h-6 w-6">
+                            <img 
+                              src={youtubeNewsChannels.find(c => c.channelId === selectedChannel)?.thumbnail} 
+                              alt="Channel" 
+                              className="h-full w-full object-cover rounded-full"
+                              onError={(e) => {
+                                (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=Channel';
+                              }}
+                            />
+                          </Avatar>
+                          <span>
+                            {youtubeNewsChannels.find(c => c.channelId === selectedChannel)?.name}
+                          </span>
+                        </>
+                      ) : (
+                        <>
+                          <Youtube className="h-5 w-5 text-red-600" />
+                          <span>All Channels</span>
+                        </>
+                      )}
                     </div>
-                  </Avatar>
-                  <span className="text-xs mt-1 font-medium">All</span>
-                </div>
-                
-                {youtubeNewsChannels.map((channel) => (
-                  <div 
-                    key={channel.id}
-                    className={`flex flex-col items-center p-2 cursor-pointer ${selectedChannel === channel.channelId ? 'opacity-100' : 'opacity-60'}`}
-                    onClick={() => handleChannelSelect(channel.channelId)}
+                    <ChevronDown className="h-4 w-4 opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start" className="w-[200px] bg-white">
+                  <DropdownMenuItem 
+                    className="flex items-center gap-2 cursor-pointer"
+                    onClick={() => handleChannelSelect(null)}
                   >
-                    <Avatar className={`h-16 w-16 rounded-full border-2 ${selectedChannel === channel.channelId ? 'border-blue-500' : 'border-gray-200'}`}>
-                      <img 
-                        src={channel.thumbnail} 
-                        alt={channel.name} 
-                        className="h-full w-full rounded-full object-cover"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(channel.name);
-                        }}
-                      />
-                    </Avatar>
-                    <span className="text-xs mt-1 font-medium truncate max-w-16">{channel.name}</span>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-
+                    <Youtube className="h-5 w-5 text-red-600" />
+                    <span>All Channels</span>
+                  </DropdownMenuItem>
+                  
+                  {youtubeNewsChannels.map((channel) => (
+                    <DropdownMenuItem 
+                      key={channel.id}
+                      className="flex items-center gap-2 cursor-pointer"
+                      onClick={() => handleChannelSelect(channel.channelId)}
+                    >
+                      <Avatar className="h-5 w-5">
+                        <img 
+                          src={channel.thumbnail} 
+                          alt={channel.name} 
+                          className="h-full w-full object-cover rounded-full"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(channel.name);
+                          }}
+                        />
+                      </Avatar>
+                      <span>{channel.name}</span>
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+            
             {/* Categories */}
-            <ScrollArea className="w-full whitespace-nowrap">
-              <div className="flex p-2 space-x-2">
+            <ScrollArea className="w-full whitespace-nowrap pb-2">
+              <div className="flex px-4 space-x-2">
                 {videoCategories.map((category) => (
                   <Button
                     key={category}
@@ -180,8 +213,8 @@ export default function Videos() {
                     onClick={() => handleCategorySelect(category)}
                     className={
                       selectedCategory === category
-                        ? "bg-blue-500 text-white"
-                        : "text-gray-700"
+                        ? "bg-blue-500 text-white flex-shrink-0"
+                        : "text-gray-700 flex-shrink-0"
                     }
                   >
                     {category}
