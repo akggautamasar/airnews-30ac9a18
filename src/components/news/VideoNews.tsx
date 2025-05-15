@@ -55,7 +55,10 @@ export const VideoNews: React.FC<VideoNewsProps> = ({
             <img 
               src={thumbnailUrl} 
               alt={title}
-              className="w-full h-full object-cover" 
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/640x360?text=Video+Thumbnail';
+              }}
             />
             <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
               <Button

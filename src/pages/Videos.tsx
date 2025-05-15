@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Search, Youtube, Filter } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import {
 } from "@/data/youtubeNewsChannels";
 import { useYoutubeVideos } from "@/hooks/useYoutubeVideos";
 import { Avatar } from "@/components/ui/avatar";
+import { toast } from "sonner";
 
 export default function Videos() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -33,6 +34,16 @@ export default function Videos() {
     channels: youtubeNewsChannels
   });
 
+  useEffect(() => {
+    // Log the videos to console for debugging
+    console.log("Available videos:", youtubeNewsVideos);
+    console.log("Filtered videos:", videos);
+    
+    if (youtubeNewsVideos.length === 0) {
+      toast.warning("No videos available. Please check your data source.");
+    }
+  }, [videos]);
+
   const searchResults = searchQuery
     ? videos.filter(item => 
         item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
@@ -45,6 +56,7 @@ export default function Videos() {
     : null;
 
   const handleVideoClick = (videoId: string) => {
+    console.log("Video clicked:", videoId);
     setSelectedVideoId(videoId);
   };
 
@@ -53,11 +65,13 @@ export default function Videos() {
   };
 
   const handleCategorySelect = (category: string) => {
+    console.log("Category selected:", category);
     setSelectedCategory(category);
     filterByCategory(category);
   };
 
   const handleChannelSelect = (channelId: string | null) => {
+    console.log("Channel selected:", channelId);
     selectChannel(channelId);
   };
 
@@ -144,6 +158,9 @@ export default function Videos() {
                         src={channel.thumbnail} 
                         alt={channel.name} 
                         className="h-full w-full rounded-full object-cover"
+                        onError={(e) => {
+                          (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(channel.name);
+                        }}
                       />
                     </Avatar>
                     <span className="text-xs mt-1 font-medium truncate max-w-16">{channel.name}</span>
@@ -221,6 +238,16 @@ export default function Videos() {
               <Youtube className="h-8 w-8 text-red-600" />
             </div>
             <p className="text-gray-500 mt-4">No videos found</p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => {
+                setSelectedCategory("All");
+                selectChannel(null);
+              }}
+            >
+              Reset Filters
+            </Button>
           </div>
         )}
       </div>
@@ -248,7 +275,10 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onClick }) => {
         <img 
           src={video.thumbnailUrl} 
           alt={video.title} 
-          className="w-full h-full object-cover" 
+          className="w-full h-full object-cover"
+          onError={(e) => {
+            (e.target as HTMLImageElement).src = 'https://via.placeholder.com/480x360?text=Video+Thumbnail';
+          }}
         />
         <div className="absolute inset-0 bg-black bg-opacity-30 flex items-center justify-center">
           <div className="rounded-full bg-white/30 backdrop-blur-sm h-12 w-12 flex items-center justify-center">
@@ -261,7 +291,10 @@ const VideoCard: React.FC<VideoCardProps> = ({ video, onClick }) => {
           <img 
             src={video.channelThumbnail} 
             alt={video.channelName}
-            className="w-10 h-10 rounded-full object-cover" 
+            className="w-10 h-10 rounded-full object-cover"
+            onError={(e) => {
+              (e.target as HTMLImageElement).src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(video.channelName);
+            }}
           />
         </div>
         <div>

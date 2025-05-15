@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { NewsVideo, NewsChannel } from '@/data/youtubeNewsChannels';
 import { toast } from 'sonner';
@@ -12,6 +13,13 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedChannel, setSelectedChannel] = useState<string | null>(null);
+
+  useEffect(() => {
+    // Set videos initially
+    if (initialVideos.length > 0) {
+      setVideos(initialVideos);
+    }
+  }, [initialVideos]);
 
   const fetchChannelVideos = async (channelId: string) => {
     setLoading(true);
@@ -29,6 +37,7 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
         
         if (filteredVideos.length > 0) {
           setVideos(filteredVideos);
+          toast.success(`Showing videos from ${channel.name}`);
         } else {
           // If no videos found for this channel, show all videos
           setVideos(initialVideos);
@@ -64,7 +73,12 @@ export const useYoutubeVideos = ({ initialVideos, channels }: UseYoutubeVideosPr
         }
       }
       
-      setVideos(filtered);
+      if (filtered.length > 0) {
+        setVideos(filtered);
+      } else {
+        setVideos(initialVideos);
+        toast.info(`No videos found in category ${category}. Showing all videos instead.`);
+      }
     }
   };
 

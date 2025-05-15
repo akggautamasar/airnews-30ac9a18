@@ -1,5 +1,30 @@
 
 {
     "date": "2025-05-15",
-    "news": []
+    "news": [
+        {
+            "id": "video1",
+            "title": "Russia Strikes 7 Ukrainian Regions Overnight; US Condemns Attack",
+            "videoId": "PXiOPvCjLPM",
+            "thumbnailUrl": "https://i.ytimg.com/vi/PXiOPvCjLPM/hqdefault.jpg",
+            "source": "CRUX News",
+            "publishedAt": "2025-05-15"
+        },
+        {
+            "id": "video2",
+            "title": "Congress Leaders Meet After Assembly Election Win, Discuss Government Formation",
+            "videoId": "i6-EUj7BbcE",
+            "thumbnailUrl": "https://i.ytimg.com/vi/i6-EUj7BbcE/hqdefault.jpg",
+            "source": "NDTV",
+            "publishedAt": "2025-05-15"
+        },
+        {
+            "id": "video3",
+            "title": "QUAD Summit: PM Modi Joins Biden, Kishida & Albanese For QUAD Plenary",
+            "videoId": "anmnaiEkKLY",
+            "thumbnailUrl": "https://i.ytimg.com/vi/anmnaiEkKLY/hqdefault.jpg",
+            "source": "CRUX News",
+            "publishedAt": "2025-05-15"
+        }
+    ]
 }
